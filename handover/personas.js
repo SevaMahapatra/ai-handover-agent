@@ -31,6 +31,10 @@ export const PERSONAS = Object.fromEntries(
   ]),
 );
 
+// The lead AI answers questions in Slack and triages drops. Not a teammate, so it never owns work.
+PERSONAS.lead = { id: "lead", name: "Handover Lead", role: "Dispatcher", city: "everywhere", icon: ":robot_face:", aiName: "Handover Lead AI", signature: "Handover Lead AI (an AI assistant that routes work to each teammate's AI)" };
+// kit/slack.js postAs("lead", ...) works like any persona. handover/run.js -> runCycle(), handover/drafts.js -> drafts store.
+
 export const persona = (id) => {
   if (!PERSONAS[id]) throw new Error(`unknown person "${id}" (expected one of ${Object.keys(PERSONAS).join(", ")})`);
   return PERSONAS[id];

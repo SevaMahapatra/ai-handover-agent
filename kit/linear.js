@@ -49,7 +49,7 @@ const updateIssue = async (id, input) =>
 
 export async function ensureLabels() {
   const t = await team();
-  const want = [...Object.values(PERSONAS).map((p) => [p.label, p.color]), [UNOWNED, "#95A2B3"], [AI, "#5E6AD2"]];
+  const want = [...Object.values(PERSONAS).filter((p) => p.label).map((p) => [p.label, p.color]), [UNOWNED, "#95A2B3"], [AI, "#5E6AD2"]];
   const d = await gql(`query($id: String!) { team(id: $id) { labels(first: 250) { nodes { id name } } } }`, { id: t.id });
   const have = Object.fromEntries(d.team.labels.nodes.map((l) => [l.name, l.id]));
   for (const [name, color] of want) {
@@ -96,7 +96,7 @@ export async function applyLedger(ledger) {
   const labels = await ensureLabels();
   const seeded = Object.fromEntries((await seedPack()).map((s) => [s.packId, s]));
   const issues = await teamIssues();
-  const ownerIds = new Set([...Object.values(PERSONAS).map((p) => labels[p.label]), labels[UNOWNED]]);
+  const ownerIds = new Set([...Object.values(PERSONAS).filter((p) => p.label).map((p) => labels[p.label]), labels[UNOWNED]]);
   const out = [];
   for (const o of ledger.obligations) {
     const primary = seeded[o.linear_ids[0]];
@@ -151,7 +151,7 @@ if (import.meta.filename === process.argv[1]) {
     const seeded = await seedPack();
     const results = await applyLedger(JSON.parse(fs.readFileSync("state/ledger.json", "utf8")));
     const issues = await teamIssues();
-    const names = new Set(Object.values(PERSONAS).map((p) => p.label).concat(UNOWNED));
+    const names = new Set(Object.values(PERSONAS).filter((p) => p.label).map((p) => p.label).concat(UNOWNED));
     const ids = new Set([...seeded.map((s) => s.id), ...issues.filter((i) => i.title.startsWith("[AI] ")).map((i) => i.id)]);
     for (const i of issues.filter((i) => ids.has(i.id)).sort((a, b) => a.identifier.localeCompare(b.identifier, "en", { numeric: true })))
       console.log(`${i.identifier}  [${i.labels.nodes.find((l) => names.has(l.name))?.name ?? "-"}]  ${i.state.name}  ${i.title}  ${i.url}`);
