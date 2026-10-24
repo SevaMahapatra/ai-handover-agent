@@ -22,7 +22,9 @@
 | Slack `postAs` / `ensureChannels` / `findMessage` | kit/slack.js | `node kit/slack.js` (#handover, #drops) |
 | `sendEmail` (always to GMAIL_USER) + `.ics` invite | kit/email.js, kit/ics.js | `node kit/email.js` |
 | Shift-change worker `runCycle()` (handover notes, AI work, drafts, asks) | handover/run.js, shift.js, work.js | `node handover/run.js [--now <ISO>]` (2nd run: 0 new) |
-| **Start command**: Slack Socket Mode listener (#drops, @mentions, ✅/❌ drafts, 5-min cycles) | handover/listen.js | `node handover/listen.js` |
+| **Start command**: Slack Socket Mode listener (#drops, @mentions, ✅/❌ drafts + decision queue, 5-min cycles) | handover/listen.js, queue.js | `node handover/listen.js` |
+| Scenario plug-ins 1,2,3,5,9,10,12 from the efficiency PDF (contract: index.js) | handover/scenarios/*.js | `node handover/scenarios/<id>.js --dry` |
+| Clean slate · board audit | scripts/reset.js, linear-audit.js | `node scripts/reset.js --yes` (supervisor stopped) · `node scripts/linear-audit.js` |
 
 ## Rules
 - Do the simplest thing that works live. No auth, tests, or DB unless asked.
@@ -31,9 +33,9 @@
 - Demo rule: every step leaves clickable proof in a real tool (a Linear issue, a Slack message, an email, a calendar event), traceable to a source line.
 - Restart-safe: all state lives in files or the tools themselves, never in a process's memory. Resuming must not redo work.
 - Never patch files with `node -e`/heredoc string replaces: a backslash-n escape becomes a real newline and breaks the file (hit 4x). Use the Edit tool.
-- Gotcha: `.claude/agents/` and `.claude/commands/` load at session start, so restart `claude` after editing them.
+- Never hand-delete bot posts or comments: dedupe markers live in Slack AND Linear, so a half-deleted pair never reposts. Use scripts/reset.js.
 
 ## Parallel work
 - Any goal with 2+ independent parts: use `/parallel`, not sequential building. Agents: builder, researcher (API docs, log digging), verifier, simplifier.
-- Worktrees branch from local HEAD (commit first) and get `.env` via .worktreeinclude. node_modules is a junction to main's: remove it with `cmd //c rmdir`, never `rm -rf`.
+- Worktrees branch from local HEAD (commit first) and get `.env` + `state/` via .worktreeinclude; drafts they make stay in THEIR state (scripts/merge-drafts.js). node_modules is a junction: remove the link only, never `rm -rf`. Agent files load at session start.
 - Start large tasks in plan mode. I may /clear between tasks: keep progress in files (DEMO.md, git log), not the conversation.
