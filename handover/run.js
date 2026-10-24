@@ -36,6 +36,7 @@ export async function runCycle({ reason = "manual", now = new Date() } = {}) {
 
   const shifts = shiftChanges(now);
   const simulated = Math.abs(now - Date.now()) > 2 * 60 * 1000;
+  const mode = simulated ? "sim" : "live"; // simulated rehearsals never block tonight's real shift changes
   const clock = (pid) => local(now, PERSONAS[pid].tz).label;
   const note = (pid) => (simulated ? `\n_(simulated clock: ${clock(pid)})_` : "");
   const onShift = (pid) => shifts.state[pid]?.onShift;
@@ -50,7 +51,7 @@ export async function runCycle({ reason = "manual", now = new Date() } = {}) {
   // 2. HANDOVER: a person goes off shift -> a done/next/why note on each open issue + one summary in #handover.
   for (const t of shifts.transitions.filter((t) => t.to === "off")) {
     const p = PERSONAS[t.personId], mine = open.filter((o) => o.owner === t.personId);
-    const mark = (o) => `handover:${o.key}:${t.personId}:${t.date}`;
+    const mark = (o) => `handover:${o.key}:${t.personId}:${t.date}:${mode}`;
     const missing = mine.filter((o) => !info[o.key].comments.some((c) => c.body.includes(mark(o))));
     const done = missing.length ? await doneNotes(missing, byRef) : {};
     for (const o of missing) {
@@ -67,7 +68,7 @@ export async function runCycle({ reason = "manual", now = new Date() } = {}) {
     }
     if (mine.length) {
       const lines = mine.map((o) => `• ${link(issueOf[o.key])} ${o.title}. Next: ${o.next_step}`).join("\n");
-      slack(`handover summary ${t.personId}`, await say(t.personId, `*${first(t.personId)} is off shift.* Handover notes are on each Linear issue (done / next / why):\n${lines}`, `[handover:${t.personId}:${t.date}]`, note(t.personId)));
+      slack(`handover summary ${t.personId}`, await say(t.personId, `*${first(t.personId)} is off shift.* Handover notes are on each Linear issue (done / next / why):\n${lines}`, `[handover:${t.personId}:${t.date}:${mode}]`, note(t.personId)));
     }
   }
 
@@ -100,7 +101,7 @@ export async function runCycle({ reason = "manual", now = new Date() } = {}) {
       got.length ? `Picked up from the last handover:\n${got.join("\n")}` : "Picked up from the last handover: no handover note on my issues yet, so I'm starting from the ledger.",
       didNow[pid]?.length ? `Done this cycle (proof on each issue):\n${didNow[pid].map((x) => `• ${x}`).join("\n")}` : `${mine.filter((o) => o.ai_can_do).length} item(s) of AI work on my issues, each logged on the issue.`,
       humans ? `${humans} item(s) need ${first(pid)} personally; I asked below, not the room.` : ""].filter(Boolean).join("\n");
-    slack(`pickup ${pid}`, await say(pid, text, `[pickup:${pid}:${date}]`, note(pid)));
+    slack(`pickup ${pid}`, await say(pid, text, `[pickup:${pid}:${date}:${mode}]`, note(pid)));
   }
 
   // 5. NEEDS HUMAN: ask the owner (only while they're on shift), once per obligation.

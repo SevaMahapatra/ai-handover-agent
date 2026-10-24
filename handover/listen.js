@@ -110,6 +110,14 @@ async function onReaction(ev) {
   if (d.status !== "pending") return log("reaction", `:${ev.reaction}: on draft ${d.id}: already ${d.status}, ignored`);
   const channel = d.slack?.channel ?? ev.item.channel;
   if (ev.reaction === "white_check_mark") {
+    // Drafts can carry placeholders like [PRICE: Sam to decide]; never send those, a human has to fill them in first.
+    const p = d.payload;
+    const holes = [...new Set(JSON.stringify([p.intendedTo, p.cc, p.subject, p.text]).match(/\[[A-Z][A-Z _/-]*:[^\]]*\]/g) ?? [])];
+    if (holes.length) {
+      const reply = await postAs(d.personId, channel, `Not sent: this draft still has placeholders a human must fill first: ${holes.join(" ")}`, { thread_ts: ts });
+      log("draft.blocked", `${d.id}: ${holes.join(" ")}`, reply.permalink);
+      return reply;
+    }
     const result = await sendEmail(d.payload);
     markDraft(d.id, "sent", result);
     const reply = await postAs(d.personId, channel, `Sent :white_check_mark: ${result.gmailUrl}`, { thread_ts: ts });
