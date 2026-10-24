@@ -54,7 +54,7 @@ export async function run(ctx) {
     const dropped = [], ok = (l) => { const fl = honesty(o.key, l, [...l.matchAll(/[\w.]+@[\w.]+/g)].map((m) => m[0]), cited); if (fl.length) dropped.push(...fl); return !fl.length; };
     const sec = (title, lines) => `**${title}**\n${lines.filter(ok).map((l) => `- ${l}`).join("\n") || "- (nothing confirmed)"}`;
     const body = [`## How deploy alerts work (draft for Wei Lin to check once)`, `_Written by ${p.aiName}, an AI, from the alert emails and chat._`,
-      [ph.summary].filter(ok).join(""),
+      // No model-written summary: it once added "the file has not been reviewed yet", which no source says. Facts below are code-assembled.
       sec("What we know", f.known), sec("Timeline of the 20 Oct incident", f.timeline), sec("Where the config lives", f.where),
       sec("What's NOT known", ["The config file isn't in the work pack, so the thresholds, recipients and escalation are unknown", "Alex is on leave per C10, so he can't be asked right now [C10]"]),
       sec("Questions for Wei Lin to verify", ph.questions),
