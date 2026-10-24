@@ -8,4 +8,5 @@ RUN npm ci --omit=dev --ignore-scripts
 COPY . .
 # Mount a persistent volume here: ledger, shift state, drafts.
 VOLUME ["/app/state"]
-CMD ["node", "handover/listen.js"]
+# First boot on an empty volume: start from the committed ledger, so obligation keys match the existing Linear issues (no duplicates).
+CMD ["sh", "-c", "mkdir -p state && { [ -f state/ledger.json ] || cp deploy/ledger.seed.json state/ledger.json; } && exec node handover/listen.js"]

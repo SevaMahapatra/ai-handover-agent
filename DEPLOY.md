@@ -24,7 +24,7 @@ node scripts/supervise.js
 3. `fly apps create zapdemo-handover-ai` (rename in fly.toml if taken) -> `fly volumes create handover_state --region dfw --size 1`.
 4. `fly secrets import < .env` (every key in .env becomes a secret).
 5. `fly deploy` (remote build of the Dockerfile) -> `fly logs` until `socket: connected`.
-6. Seed the ledger: `fly ssh sftp shell` -> `put state/ledger.json /app/state/ledger.json`, then `fly machine restart`.
+6. No manual seeding: on an empty volume, the container copies `deploy/ledger.seed.json` in before the listener starts. Refresh the seed before deploying: `cp state/ledger.json deploy/ledger.seed.json`.
 7. Stop the laptop supervisor (one listener only). Restart test: `fly machine restart`, and the logs show it resumes with 0 duplicate posts.
 
 ## Cloud option B: Railway

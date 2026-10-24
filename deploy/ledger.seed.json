@@ -1,0 +1,753 @@
+{
+  "obligations": [
+    {
+      "key": "northwind-price-and-layout-reply",
+      "title": "Send Maria (Northwind) the dock layout and a price; reply to her chaser",
+      "owed_to": "Maria Gomez, Northwind Cold Storage",
+      "due": "2026-10-22",
+      "owner": "sam",
+      "status": "open",
+      "why": "Sam promised the layout and a number by Thu 22 Oct (C01, E01) and took the price himself (S03). Maria asked for a rough cost for her VP (E03). The deadline passed while Sam was travelling (K04). Maria chased on 24 Oct because her VP wants the number (E15). Layout v2 is done (S04), but no customer price exists in any source. The Optix $4,680 quote (C09, E10) is our hardware cost, not a customer price.",
+      "next_step": "Sam, who is back from his trip, sets the customer price today. He then sends Maria layout v2 and the number, with an apology for the delay.",
+      "ai_can_do": "Draft a reply to Maria that: apologises for missing Thursday; summarises layout v2 (12 doors, 12 cameras, one per door, mounted 4m high); leaves a placeholder for Sam's price; says the call with Tom Reyes is being booked.",
+      "needs_human": "Sam must decide the customer price. Do not use the $4,680 supplier quote as the price.",
+      "linear_ids": [
+        "ZAP-102"
+      ],
+      "sources": [
+        "C01",
+        "E01",
+        "E03",
+        "E15",
+        "S03",
+        "S04",
+        "K04",
+        "C09",
+        "E10",
+        "ZAP-102"
+      ]
+    },
+    {
+      "key": "northwind-layout",
+      "title": "Northwind dock camera layout for doors 1-12",
+      "owed_to": "Maria Gomez, Northwind Cold Storage",
+      "due": "2026-10-22",
+      "owner": "weilin",
+      "status": "done",
+      "why": "Wei Lin finished layout v2 (12 doors, 12 cameras, one per door, 4m high) and saved it in Drive (S04, ZAP-101). Sending it to Maria is tracked in northwind-price-and-layout-reply.",
+      "next_step": "Close duplicate ZAP-103. Keep layout v2 on hand for the price reply and the Optix model check.",
+      "ai_can_do": "Close ZAP-103 as a duplicate of ZAP-101.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-101",
+        "ZAP-103"
+      ],
+      "sources": [
+        "C01",
+        "S03",
+        "S04",
+        "ZAP-101",
+        "ZAP-103"
+      ]
+    },
+    {
+      "key": "northwind-tom-call",
+      "title": "Book the next Northwind call with site manager Tom Reyes",
+      "owed_to": "Maria Gomez / Tom Reyes, Northwind Cold Storage",
+      "due": null,
+      "owner": "dana",
+      "status": "open",
+      "why": "Tom must be on the next call because he signs off on anything mounted on the building (C01). Sam promised to set it up (E01). Maria offered Friday afternoon (E03), but Sam was in the air until Sat 24 Oct (K04). That Friday (23 Oct) has passed with nothing booked.",
+      "next_step": "Dana emails Maria for Tom's availability next week. She books the call with Sam, and with Wei Lin for layout questions.",
+      "ai_can_do": "Draft an email to Maria that apologises for missing Friday and asks for Tom's availability next week. Propose slots that avoid Sam's 27 Oct 17:00 CT Optix PO deadline (K07) and 28 Oct 09:00 CT Cedar deadline (K06).",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-104"
+      ],
+      "sources": [
+        "C01",
+        "E01",
+        "E03",
+        "K04",
+        "K06",
+        "K07",
+        "ZAP-104"
+      ]
+    },
+    {
+      "key": "northwind-one-pager",
+      "title": "One-pager on pallet-damage tracking for Maria's VP",
+      "owed_to": "Maria Gomez, Northwind Cold Storage",
+      "due": null,
+      "owner": "priya",
+      "status": "open",
+      "why": "Maria asked for a one-pager on pallet-damage tracking that she can forward to her VP (C01). Priya can make it but hasn't been told what Maria asked for (C08, S11).",
+      "next_step": "Give Priya the brief from C01. Priya drafts the one-pager.",
+      "ai_can_do": "Write a one-pager outline. Problem: pallets are damaged at 12 dock doors at a Dallas cold-storage DC, and no one can tell which shift or carrier caused it. Solution: one camera per door (layout v2). Outcome: damage attributed by shift and carrier. Leave pricing out.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-105"
+      ],
+      "sources": [
+        "C01",
+        "C08",
+        "S11",
+        "S04",
+        "ZAP-105"
+      ]
+    },
+    {
+      "key": "optix-po-decision",
+      "title": "Decide on Optix PO for 12 cameras (Quote Q-1182) before stock hold expires",
+      "owed_to": "Ben Ortiz, Optix Camera Supply",
+      "due": "2026-10-27",
+      "owner": "sam",
+      "status": "open",
+      "why": "Optix needs a PO by Tue 27 Oct to hold stock. The quote is 12 x OX-4K dome, $4,680 total, 50% upfront, 2-week lead time (E10). The camera model must match Wei Lin's layout, and Wei Lin hasn't seen the quote (C09). The 'test payment only tonight' remark (C09) is not in the written quote (E10).",
+      "next_step": "Wei Lin confirms the OX-4K dome fits layout v2. Sam then decides on the PO and the upfront payment, ideally once Northwind's go-ahead is clear.",
+      "ai_can_do": "Draft a Slack message to Wei Lin with the Q-1182 details (12 x OX-4K dome, 2-week lead time). Ask her to confirm it matches layout v2 (one per door, 4m high) before Tue 27 Oct.",
+      "needs_human": "Sam must approve the PO and the 50% upfront payment. Make no 'test payment' until Sam confirms it with Optix in writing.",
+      "linear_ids": [],
+      "sources": [
+        "C09",
+        "E10",
+        "K07",
+        "S04"
+      ]
+    },
+    {
+      "key": "harbor-ip-vlan",
+      "title": "Harbor Point: configure camera IPs and answer Ken's VLAN question",
+      "owed_to": "Ken Ong, Harbor Point Yard",
+      "due": "2026-11-02",
+      "owner": "weilin",
+      "status": "open",
+      "why": "Ken sent the network details: 10.20.4.0/24, mask 255.255.255.0, gateway 10.20.4.1, cameras on .50-.55 (E04). He asked whether we need a VLAN, and no reply appears in the sources.",
+      "next_step": "Wei Lin answers Ken on the VLAN and records the IP plan for the 6 cameras.",
+      "ai_can_do": "Draft a reply to Ken that thanks him and confirms the IP plan (.50-.55, mask 255.255.255.0, gateway 10.20.4.1). Leave the VLAN answer for Wei Lin.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-111"
+      ],
+      "sources": [
+        "C02",
+        "E02",
+        "E04",
+        "S01",
+        "ZAP-111"
+      ]
+    },
+    {
+      "key": "harbor-camera3-relocation",
+      "title": "Harbor Point: confirm new position for camera 3 (rack blocks bay C)",
+      "owed_to": "Raj Kumar, Harbor Point Yard",
+      "due": "2026-11-02",
+      "owner": "weilin",
+      "status": "open",
+      "why": "A new storage rack blocks camera 3's view of bay C (C02). Raj sent a photo and proposed moving the camera 2m left onto the column (W01). Wei Lin owes the decision.",
+      "next_step": "Wei Lin reviews the photo and confirms or counters the column spot with Raj.",
+      "ai_can_do": "Draft a WhatsApp reply to Raj that acknowledges the photo and confirms the column position, pending Wei Lin's check of bay C coverage.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-110"
+      ],
+      "sources": [
+        "C02",
+        "W01",
+        "ZAP-110"
+      ]
+    },
+    {
+      "key": "harbor-start-time",
+      "title": "Harbor Point: answer Raj's request to start at 13:30 (forklifts move at 16:00)",
+      "owed_to": "Raj Kumar, Harbor Point Yard",
+      "due": null,
+      "owner": "weilin",
+      "status": "open",
+      "why": "Raj asked to start at 13:30 instead of 14:00 because forklifts move at 16:00 (C02, W02). The calendar slot runs until 16:30 (K01).",
+      "next_step": "Wei Lin decides whether to move the install to 13:30 and finish by 16:00, then updates K01 and replies to Raj.",
+      "ai_can_do": "Draft a reply to Raj proposing 13:30-16:00 SGT on Tue 3 Nov, and prepare the K01 calendar update.",
+      "needs_human": null,
+      "linear_ids": [],
+      "sources": [
+        "C02",
+        "W02",
+        "K01"
+      ]
+    },
+    {
+      "key": "crestline-call-reschedule",
+      "title": "Crestline call: resolve Wei Lin's clash with Harbor install; answer Farah's demo question",
+      "owed_to": "Farah Aziz, Crestline Data Centers",
+      "due": null,
+      "owner": "dana",
+      "status": "open",
+      "why": "The Crestline call (3 Nov 15:00-15:45 SGT) falls inside Wei Lin's Harbor Point install (14:00-16:30 SGT), and Wei Lin is needed on both (C10, K01, K02, S02). Farah also asked on WhatsApp whether the engineer can show floor-by-floor progress tracking (W03). She prefers WhatsApp (C03).",
+      "next_step": "Dana agrees a new slot with Wei Lin, proposes it to Farah, and confirms on WhatsApp that the engineer will demo floor-by-floor tracking.",
+      "ai_can_do": "Draft a WhatsApp message to Farah. Confirm the engineer will demo floor-by-floor tracking, and offer an alternative slot outside 14:00-16:30 SGT on 3 Nov (or another day) that is free on Wei Lin's calendar.",
+      "needs_human": "Wei Lin must confirm her availability for the new slot.",
+      "linear_ids": [
+        "ZAP-121"
+      ],
+      "sources": [
+        "C02",
+        "C03",
+        "C10",
+        "S01",
+        "S02",
+        "K01",
+        "K02",
+        "W03",
+        "ZAP-121"
+      ]
+    },
+    {
+      "key": "crestline-one-pager",
+      "title": "Crestline one-pager (floor-by-floor fit-out tracking) emailed to Farah before the call",
+      "owed_to": "Farah Aziz, Crestline Data Centers",
+      "due": "2026-11-02",
+      "owner": "priya",
+      "status": "open",
+      "why": "Dana promised Farah a one-pager by email before the call (C03), and Farah asked for it so her team can read it (E05). Dana asked Sam whether it went (S16), and no sent email appears in the sources. Wei Lin was not copied (C03).",
+      "next_step": "Priya writes the one-pager. Dana emails it to Farah and copies Wei Lin.",
+      "ai_can_do": "Outline a one-pager on tracking data-centre fit-out progress floor by floor for a Singapore build.",
+      "needs_human": "Dana to send it to Farah and copy Wei Lin. Sam to answer S16 on whether anything was already sent.",
+      "linear_ids": [
+        "ZAP-120"
+      ],
+      "sources": [
+        "C03",
+        "E05",
+        "S16",
+        "ZAP-120"
+      ]
+    },
+    {
+      "key": "jordan-onboarding",
+      "title": "Onboard Jordan Lee: logins, laptop, first task, first-week plan, Monday 9am details",
+      "owed_to": "Jordan Lee (new ML engineer)",
+      "due": "2026-10-25",
+      "owner": "weilin",
+      "status": "open",
+      "why": "Jordan starts Mon 26 Oct at 9am Austin. Sam promised logins and a first-week plan before the weekend (C04), but nothing went out, and Jordan is asking where to go (E06). He needs Slack, Linear and email accounts, a laptop, a first task and a buddy (Wei Lin) (C04, S06). It is now Sunday 4am in Singapore, so Wei Lin is offline.",
+      "next_step": "Sam replies to Jordan today with Monday details. Accounts and the laptop are ready before Monday 9am Austin (10pm Monday SGT).",
+      "ai_can_do": "Draft a reply to Jordan that apologises for the delay and covers Monday logistics, with a placeholder for location. Draft a first-week plan outline: accounts, Wei Lin as buddy, intro at the 19:00 CT daily stand-up (K03).",
+      "needs_human": "Sam to answer Jordan's email (it went to him), confirm where Jordan goes at 9am, and approve any laptop spend.",
+      "linear_ids": [
+        "ZAP-130"
+      ],
+      "sources": [
+        "C04",
+        "S06",
+        "E06",
+        "K03",
+        "ZAP-130"
+      ]
+    },
+    {
+      "key": "bayview-glare",
+      "title": "Bayview: fix night-shift glare false alerts (cam 5 still bad)",
+      "owed_to": "Chris Hale, Bayview Freight DC",
+      "due": null,
+      "owner": "weilin",
+      "status": "open",
+      "why": "There were 14 false alerts after 10pm on two nights, and the night lead is starting to ignore them (C05, E07). The night mask improved cam 2, but cam 5 is still bad (S14, W04).",
+      "next_step": "Wei Lin adjusts the night mask or settings on cam 5 and confirms with Chris.",
+      "ai_can_do": "Draft a WhatsApp reply to Chris that acknowledges the cam 2 improvement and says cam 5 is being reworked.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-140"
+      ],
+      "sources": [
+        "C05",
+        "E07",
+        "S14",
+        "W04",
+        "ZAP-140"
+      ]
+    },
+    {
+      "key": "bayview-pass-bar",
+      "title": "Bayview: written, signed pilot pass bar before the pilot review",
+      "owed_to": "Chris Hale, Bayview Freight DC",
+      "due": null,
+      "owner": "sam",
+      "status": "open",
+      "why": "The pilot success criteria were never signed, and Chris wants them in writing before the review (C05). This is contractual and Sam's call (S15).",
+      "next_step": "Sam defines the pass criteria and sends them to Chris for signature.",
+      "ai_can_do": "Draft a pass-bar document template and a cover email to Chris, with the criteria left blank for Sam.",
+      "needs_human": "Sam must set and sign the pass criteria (contractual).",
+      "linear_ids": [
+        "ZAP-141"
+      ],
+      "sources": [
+        "C05",
+        "S15",
+        "ZAP-141"
+      ]
+    },
+    {
+      "key": "bayview-weekly-report",
+      "title": "Bayview weekly report every Friday",
+      "owed_to": "Chris Hale, Bayview Freight DC",
+      "due": "2026-10-30",
+      "owner": "weilin",
+      "status": "open",
+      "why": "Chris wants a weekly report every Friday (C05, E07). No source shows a report went out on Fri 23 Oct. The next one is due Fri 30 Oct 17:00 SGT (K05).",
+      "next_step": "Wei Lin sends a catch-up report now and the next one on 30 Oct.",
+      "ai_can_do": "Draft the report: 14 false alerts after 10pm on two nights; night mask on cams 2 and 5; cam 2 improved, cam 5 still bad; next steps.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-142"
+      ],
+      "sources": [
+        "C05",
+        "E07",
+        "K05",
+        "S14",
+        "W04",
+        "ZAP-142"
+      ]
+    },
+    {
+      "key": "cedar-numbers-references",
+      "title": "Cedar Fund: updated pilot numbers and 2 customer references",
+      "owed_to": "Rachel Kim, Cedar Fund",
+      "due": "2026-10-28",
+      "owner": "sam",
+      "status": "open",
+      "why": "Rachel asked for updated pilot numbers and 2 references by Wed 28 Oct (C06, E08). Each customer must give permission before their contact is shared (C06).",
+      "next_step": "Sam asks candidate customers for permission to be a reference, then compiles the pilot numbers.",
+      "ai_can_do": "Draft a permission-request email Sam could send to a pilot customer (e.g. Chris Hale, Bayview) asking whether they would act as a reference for an investor.",
+      "needs_human": "Sam to pick the references, get their permission, and approve which numbers are shared with the investor.",
+      "linear_ids": [
+        "ZAP-150"
+      ],
+      "sources": [
+        "C06",
+        "E08",
+        "K06",
+        "ZAP-150"
+      ]
+    },
+    {
+      "key": "cedar-engineer-call",
+      "title": "Book a 20-minute tech call between Rachel (Cedar Fund) and Wei Lin",
+      "owed_to": "Rachel Kim, Cedar Fund",
+      "due": null,
+      "owner": "dana",
+      "status": "open",
+      "why": "Rachel wants 20 minutes with the engineer to understand the tech, 'when convenient' (C06, E08). Nothing is booked. Rachel's time zone is not stated in the sources.",
+      "next_step": "Dana asks Rachel for her availability and time zone, then books a slot that suits Wei Lin in Singapore.",
+      "ai_can_do": "Draft an email to Rachel offering 20-minute slots during Wei Lin's Singapore working hours. Avoid the 19:00-19:15 CT stand-up (K03) and the 3 Nov install (K01), and ask Rachel to confirm her time zone.",
+      "needs_human": null,
+      "linear_ids": [],
+      "sources": [
+        "C06",
+        "E08",
+        "K01",
+        "K03"
+      ]
+    },
+    {
+      "key": "weilin-reimbursement",
+      "title": "Approve and reimburse Wei Lin's $640 Harbor Point trip",
+      "owed_to": "Wei Lin Tan",
+      "due": null,
+      "owner": "sam",
+      "status": "open",
+      "why": "Wei Lin paid $640 out of pocket (taxi and hotel) and needs Sam's approval (C10, S09).",
+      "next_step": "Sam approves and pays.",
+      "ai_can_do": null,
+      "needs_human": "Sam to approve and pay the $640.",
+      "linear_ids": [
+        "ZAP-160"
+      ],
+      "sources": [
+        "C10",
+        "S09",
+        "ZAP-160"
+      ]
+    },
+    {
+      "key": "deploy-alerts-docs",
+      "title": "Document how deploy-api alerts are set up (Alex on leave)",
+      "owed_to": "Internal team",
+      "due": null,
+      "owner": "weilin",
+      "status": "open",
+      "why": "deploy-api went down for 29 minutes, and nobody knows how the alerts are wired (C10, S07, S08). Alex set them up and is on two weeks' leave (C10). The alert email names the rule file alerts/deploy.yaml and an http health check (E11, E12).",
+      "next_step": "Wei Lin reads alerts/deploy.yaml and writes up the setup.",
+      "ai_can_do": "Start a doc stub: check type http health; rule alerts/deploy.yaml (owner alex); alerts emailed to weilin@; outage 2026-10-20 03:12-03:41 UTC.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-161"
+      ],
+      "sources": [
+        "C10",
+        "E11",
+        "E12",
+        "S07",
+        "S08",
+        "ZAP-161"
+      ]
+    },
+    {
+      "key": "bayview-case-study",
+      "title": "Send Bayview case study draft and photo list to Lisa Park for approval",
+      "owed_to": "Lisa Park, Bayview Freight",
+      "due": null,
+      "owner": "priya",
+      "status": "open",
+      "why": "The draft is ready, but Bayview must approve it before anything goes public (C08). Lisa asked for the draft and the photos we plan to use (E14).",
+      "next_step": "Priya emails Lisa the draft and the photo list.",
+      "ai_can_do": "Draft the email to Lisa with the case study attached and a placeholder list of planned photos.",
+      "needs_human": null,
+      "linear_ids": [
+        "ZAP-170"
+      ],
+      "sources": [
+        "C08",
+        "E14",
+        "ZAP-170"
+      ]
+    },
+    {
+      "key": "bayview-night-clip",
+      "title": "30-second Bayview night-shift clip for Priya",
+      "owed_to": "Priya Nair",
+      "due": "2026-10-26",
+      "owner": "weilin",
+      "status": "open",
+      "why": "Priya needs the clip for Monday's LinkedIn post (C08, S10). It shows Bayview's site, and Bayview must approve anything before it goes public (C08).",
+      "next_step": "Wei Lin exports a 30s night-shift clip. Priya confirms with Bayview (Lisa) that it can be public.",
+      "ai_can_do": null,
+      "needs_human": "Bayview's approval must be confirmed before the clip is used publicly.",
+      "linear_ids": [
+        "ZAP-171"
+      ],
+      "sources": [
+        "C08",
+        "S10",
+        "ZAP-171"
+      ]
+    },
+    {
+      "key": "linkedin-post-monday",
+      "title": "LinkedIn post planned for Monday 26 Oct",
+      "owed_to": "Internal (marketing)",
+      "due": "2026-10-26",
+      "owner": "priya",
+      "status": "blocked",
+      "why": "The post is planned for Mon 26 Oct and needs Wei Lin's 30s night-shift clip, which hasn't been delivered (C08, S10).",
+      "next_step": "Wait for the clip and Bayview's OK, then publish.",
+      "ai_can_do": "Draft the post copy around night-shift visibility, with a slot for the clip.",
+      "needs_human": null,
+      "linear_ids": [],
+      "sources": [
+        "C08",
+        "S10"
+      ]
+    },
+    {
+      "key": "ridgeline-site-visit",
+      "title": "Book Ridgeline Castings site visit (Tue or Wed next week, mornings)",
+      "owed_to": "Omar Haddad, Ridgeline Castings",
+      "due": null,
+      "owner": "dana",
+      "status": "open",
+      "why": "Omar asked for a site visit on Tuesday or Wednesday next week, mornings preferred (C07, E09). Dana said she'd check calendars, and nothing is booked yet (S12).",
+      "next_step": "Dana confirms who attends and books a morning on Tue 27 or Wed 28 Oct.",
+      "ai_can_do": "Propose Tue 27 Oct morning (Sam's Cedar deadline is Wed 28 at 09:00 CT, K06) and draft a reply to Omar.",
+      "needs_human": null,
+      "linear_ids": [],
+      "sources": [
+        "C07",
+        "E09",
+        "S12",
+        "K06",
+        "K07"
+      ]
+    },
+    {
+      "key": "ridgeline-ballpark-price",
+      "title": "Ballpark price range for Ridgeline Castings",
+      "owed_to": "Omar Haddad, Ridgeline Castings",
+      "due": null,
+      "owner": "sam",
+      "status": "open",
+      "why": "Omar needs a ballpark price to get budget (C07, E09). Sam said he'd handle it when he landed (S13), and he landed Sat 24 Oct (K04).",
+      "next_step": "Sam sets the price range and Dana passes it on.",
+      "ai_can_do": "Draft a reply to Omar with a placeholder for Sam's range.",
+      "needs_human": "Sam must set the price range.",
+      "linear_ids": [],
+      "sources": [
+        "C07",
+        "E09",
+        "S13",
+        "K04"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "what": "Wei Lin is double-booked on Tue 3 Nov. The Harbor Point install runs 14:00-16:30 SGT, and the Crestline call runs 15:00-15:45 SGT with Wei Lin invited.",
+      "owner": "dana",
+      "sources": [
+        "K01",
+        "K02",
+        "C02",
+        "C03",
+        "C10",
+        "S01",
+        "S02",
+        "ZAP-121"
+      ]
+    },
+    {
+      "what": "The Harbor Point install is booked until 16:30 SGT, but Raj says forklifts move at 16:00 and asks to start at 13:30.",
+      "owner": "weilin",
+      "sources": [
+        "K01",
+        "C02",
+        "W02"
+      ]
+    },
+    {
+      "what": "Optix terms differ. The call mentions a 'test payment only tonight' (C09), but the written quote Q-1182 says only 50% upfront with a PO by 27 Oct (E10).",
+      "owner": "sam",
+      "sources": [
+        "C09",
+        "E10"
+      ]
+    },
+    {
+      "what": "The deploy outage timing doesn't match. The stand-up says the server went down 'Tuesday night' (C10). The alerts show 2026-10-20 03:12-03:41 UTC, which is Monday night in Austin and Tuesday late morning in Singapore (E11, E12, S07).",
+      "owner": "weilin",
+      "sources": [
+        "C10",
+        "E11",
+        "E12",
+        "S07"
+      ]
+    },
+    {
+      "what": "Sam's travel dates differ. C01 says he flies Thursday into Friday, but the calendar and Slack show him away until Saturday 24 Oct 08:00 CT.",
+      "owner": "sam",
+      "sources": [
+        "C01",
+        "S05",
+        "K04"
+      ]
+    },
+    {
+      "what": "The Northwind price is unassigned in Linear (ZAP-102), but Sam said he'd do the price (S03).",
+      "owner": "sam",
+      "sources": [
+        "ZAP-102",
+        "S03"
+      ]
+    }
+  ],
+  "linear_fixes": [
+    {
+      "linear_id": "ZAP-102",
+      "fix": "Assign to sam. It is overdue (due 22 Oct) and Maria chased on 24 Oct. Add a note that the Optix $4,680 is cost, not price. Consider a new issue for the Optix PO, due 27 Oct.",
+      "sources": [
+        "S03",
+        "E15",
+        "C09",
+        "E10",
+        "K07"
+      ]
+    },
+    {
+      "linear_id": "ZAP-103",
+      "fix": "Close as a duplicate of ZAP-101 (layout v2 done).",
+      "sources": [
+        "ZAP-101",
+        "S04"
+      ]
+    },
+    {
+      "linear_id": "ZAP-104",
+      "fix": "Assign to dana. Maria's Friday-afternoon offer has passed. Rebook with Tom for next week.",
+      "sources": [
+        "E01",
+        "E03",
+        "C01"
+      ]
+    },
+    {
+      "linear_id": "ZAP-105",
+      "fix": "Assign to priya and move from Backlog to Todo. Add the brief from C01.",
+      "sources": [
+        "C01",
+        "C08",
+        "S11"
+      ]
+    },
+    {
+      "linear_id": "ZAP-110",
+      "fix": "The note is stale. Raj sent the photo and proposed moving cam 3 2m left onto the column.",
+      "sources": [
+        "W01"
+      ]
+    },
+    {
+      "linear_id": "ZAP-111",
+      "fix": "IPs received (10.20.4.50-.55, gateway 10.20.4.1). Retitle to the remaining work: configure the cameras and answer Ken's VLAN question.",
+      "sources": [
+        "E04"
+      ]
+    },
+    {
+      "linear_id": "ZAP-120",
+      "fix": "Assign: priya writes it, dana sends it and copies Wei Lin. Whether it was sent is unconfirmed (S16).",
+      "sources": [
+        "C03",
+        "E05",
+        "S16"
+      ]
+    },
+    {
+      "linear_id": "ZAP-121",
+      "fix": "Assign to dana and move out of Backlog. The clash is confirmed on the calendars.",
+      "sources": [
+        "K01",
+        "K02"
+      ]
+    },
+    {
+      "linear_id": "ZAP-130",
+      "fix": "Assign to weilin (onboarding). Urgent: Sam's pre-weekend promise was missed and Jordan chased on 23 Oct.",
+      "sources": [
+        "C04",
+        "S06",
+        "E06"
+      ]
+    },
+    {
+      "linear_id": "ZAP-140",
+      "fix": "Update the note: the mask helped cam 2, but cam 5 is still bad.",
+      "sources": [
+        "W04"
+      ]
+    },
+    {
+      "linear_id": "ZAP-141",
+      "fix": "Assign to sam (contractual).",
+      "sources": [
+        "C05",
+        "S15"
+      ]
+    },
+    {
+      "linear_id": "ZAP-142",
+      "fix": "Assign to weilin, move to Todo, and set due 2026-10-30 (recurring Fridays). The 23 Oct report is not shown as sent.",
+      "sources": [
+        "C05",
+        "E07",
+        "K05"
+      ]
+    },
+    {
+      "linear_id": "ZAP-160",
+      "fix": "Assign to sam (approvals and payments).",
+      "sources": [
+        "C10",
+        "S09"
+      ]
+    },
+    {
+      "linear_id": "ZAP-161",
+      "fix": "Assign to weilin. Add the rule file alerts/deploy.yaml and the http health check from the alert email.",
+      "sources": [
+        "E11",
+        "C10"
+      ]
+    },
+    {
+      "linear_id": "ZAP-171",
+      "fix": "Assign to weilin. Note that Bayview approval is needed before public use.",
+      "sources": [
+        "S10",
+        "C08"
+      ]
+    }
+  ],
+  "honesty_flags": [],
+  "updated_at": "2026-10-24T21:41:15.148Z",
+  "source_refs": [
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "E11",
+    "E12",
+    "E13",
+    "E14",
+    "E15",
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S06",
+    "S07",
+    "S08",
+    "S09",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "W01",
+    "W02",
+    "W03",
+    "W04",
+    "K01",
+    "K02",
+    "K03",
+    "K04",
+    "K05",
+    "K06",
+    "K07",
+    "ZAP-101",
+    "ZAP-102",
+    "ZAP-103",
+    "ZAP-104",
+    "ZAP-105",
+    "ZAP-110",
+    "ZAP-111",
+    "ZAP-120",
+    "ZAP-121",
+    "ZAP-130",
+    "ZAP-140",
+    "ZAP-141",
+    "ZAP-142",
+    "ZAP-150",
+    "ZAP-160",
+    "ZAP-161",
+    "ZAP-170",
+    "ZAP-171"
+  ]
+}
