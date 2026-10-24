@@ -15,6 +15,7 @@ import { PERSONAS } from "./personas.js";
 import { loadSources } from "./sources.js";
 import { shiftChanges, local } from "./shift.js";
 import { postDecisionQueue, FOUNDER } from "./queue.js";
+import { runScenarios } from "./scenarios/index.js";
 import { doWork, linearIssue, say, pool, link, honesty, citedText, workMarker } from "./work.js";
 
 const MAX_WORK_PER_PERSON = 6; // per cycle, keeps a demo cycle fast
@@ -131,6 +132,9 @@ export async function runCycle({ reason = "manual", now } = {}) {
     slack(`ask ${o.key}`, await say(o.owner, `${first(o.owner)} (human), only you can decide: ${o.needs_human} Context: ${link(issueOf[o.key])}`, `[ask:${o.key}]`, note(o.owner)));
   out.posted.push(...(await postDecisionQueue({ ledger, issueOf, info, now, simulated, onShift })));
 
+  // 6. SCENARIOS: one plug-in per scenario in handover/scenarios/ (see index.js for the contract). Each is isolated.
+  out.scenarios = await runScenarios({ ledger, open, issueOf, info, byRef, sources, now, simulated, mode, note, onShift, dry: false });
+
   shifts.save();
   return { reason, now: now.toISOString(), changes: r.changes ?? [], issues, transitions: shifts.transitions, first: shifts.first, simulated, ...out };
 }
@@ -143,7 +147,7 @@ if (import.meta.filename === process.argv[1]) {
     if (now && isNaN(now)) throw new Error(`bad --now value "${process.argv[i + 1]}" (want ISO, e.g. 2026-10-24T19:30:00-05:00)`);
     const r = await runCycle({ reason: "cli", now });
     console.log(`clock: ${r.now}${r.simulated ? " (SIMULATED)" : ""} · ${r.first ? "first run: shift state recorded, no transitions" : `transitions: ${r.transitions.map((t) => `${t.personId} ${t.to}`).join(", ") || "none"}`}`);
-    for (const e of [...r.handovers, ...r.comments, ...r.drafts, ...r.posted]) console.log(`+ ${e.what}: ${e.link}`);
+    for (const e of [...r.handovers, ...r.comments, ...r.drafts, ...r.posted, ...(r.scenarios ?? [])]) console.log(`+ ${e.what}: ${e.link}`);
     for (const f of r.flags) console.log(`! honesty: ${f}`);
     console.log(`cycle (${r.reason}) at ${r.now}: ${r.changes.length} changes, ${r.issues.filter((x) => x.action !== "unchanged").length} issues touched, ${r.comments.length} comments, ${r.posted.length} posts, ${r.drafts.length} drafts, ${r.handovers.length} handovers, ${r.flags.length} honesty flags`);
   });
