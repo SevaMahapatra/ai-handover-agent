@@ -140,12 +140,13 @@ export async function applyLedger(ledger) {
   for (const f of ledger.linear_fixes ?? []) {
     if (!seeded[f.linear_id]) continue;
     await comment(seeded[f.linear_id].id, `AI-handover fix: ${f.fix}\n\nSources: ${f.sources.join(", ")}\n\nmarker: fix:${f.linear_id}`);
-    // Duplicates get closed, so the board only shows real work.
+    // Duplicates get closed, so the board only shows real work. "Canceled", not "Duplicate":
+    // Linear rejects the Duplicate state without a duplicate relation ("missing duplicate relation").
     if (/duplicate/i.test(f.fix)) {
-      const s = (await team()).states.nodes;
-      const dup = s.find((x) => x.name === "Duplicate") ?? s.find((x) => x.name === "Canceled");
+      const canceled = (await team()).states.nodes.find((x) => x.name === "Canceled");
       const cur = issues.find((i) => i.id === seeded[f.linear_id].id);
-      if (dup && cur?.state.name !== dup.name) await updateIssue(cur.id, { stateId: dup.id });
+      if (canceled && cur && cur.state.name !== canceled.name)
+        await updateIssue(cur.id, { stateId: canceled.id }).catch((e) => logKitEvent("linear.error", `close duplicate ${cur.identifier}: ${e.message}`, {}));
     }
   }
   return out;
