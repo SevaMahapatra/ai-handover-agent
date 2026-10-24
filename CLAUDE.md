@@ -11,19 +11,17 @@
 
 ## Commands
 - Preflight: `./preflight.sh` · demo runbook: DEMO.md · prompt templates: PROMPTS.md
-- Dev server: `node server.js` (worktrees: PORT=3101+) · ngrok: `ngrok http 3000` (not installed: `winget install ngrok.ngrok`) · deploy: `npx vercel --prod`
+- `.env`: key names only, never print values. Placeholders count as unset (`requireEnv`, kit/env.js). Slack uses Socket Mode: no ngrok or deploy.
 
 ## Kit functions
 | Function | File | Test |
 |---|---|---|
-| `scrapeUrl(url)` | kit/scrape.js | `node kit/scrape.js <url>` |
-| inbound SMS/call webhook | api/inbound.js | `curl -X POST localhost:3000/api/inbound -d "From=+1555&Body=hi"` |
 | `sendWhatsApp(text, to?)` | kit/whatsapp.js | `node kit/whatsapp.js "hi"` (recipient must join the Twilio sandbox first) |
-| /status page (last 10 kit events) | api/status.js | open `localhost:3000/api/status` |
-| Not built yet: Granola, Linear, Slack, email, calendar | | |
-
-## .env (names only; never print values)
-All keys are listed in `.env.example`. Values that are still placeholders count as unset (`requireEnv` in kit/env.js). As of now, every key is a placeholder.
+| Dispatcher: sources -> `state/ledger.json` (owners, citations, honesty audit) | handover/dispatch.js | `node handover/dispatch.js` (~100s) · drops: `--update` (~17s) |
+| Linear sync, ZAP team only, idempotent | kit/linear.js | `node kit/linear.js` (2nd run: 0 created) |
+| Slack `postAs` / `ensureChannels` / `findMessage` | kit/slack.js | `node kit/slack.js` (#handover, #drops) |
+| `sendEmail` (always to GMAIL_USER) + `.ics` invite | kit/email.js, kit/ics.js | `node kit/email.js` |
+| Not built yet: shift-change worker, Socket Mode listener | | |
 
 ## Rules
 - Do the simplest thing that works live. No auth, tests, or DB unless asked.
