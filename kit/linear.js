@@ -82,14 +82,26 @@ export async function seedPack() {
   return out;
 }
 
-const block = (o) => [START, `**Owed to:** ${o.owed_to}`, `**Why:** ${o.why}`, `**Next step:** ${o.next_step}`,
+const block = (o, due) => [START, `**Owed to:** ${o.owed_to}`, `**Due:** ${o.due ? `${o.due} (from the sources)` : `${due} (AI target: no deadline in the sources)`}`,
+  `**Why:** ${o.why}`, `**Next step:** ${o.next_step}`,
   `**AI can do:** ${o.ai_can_do ?? "-"}`, `**Needs human:** ${o.needs_human ?? "-"}`, `**Sources:** ${o.sources.join(", ")}`, `ledger-key: ${o.key}`, END].join("\n\n");
 
-function withBlock(desc, o) {
+function withBlock(desc, o, due) {
   desc = desc ?? "";
   const a = desc.indexOf(START), b = desc.indexOf(END);
   const rest = a >= 0 && b > a ? desc.slice(0, a) + desc.slice(b + END.length) : desc;
-  return `${rest.trim()}\n\n${block(o)}`.trim();
+  return `${rest.trim()}\n\n${block(o, due)}`.trim();
+}
+
+// No deadline in the sources -> a target 2 working days out, labelled "AI target" on the issue.
+// Set once and then kept (existing dueDate wins), so it doesn't drift every day.
+function aiTarget(from = new Date()) {
+  const d = new Date(from);
+  for (let n = 0; n < 2; ) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (d.getUTCDay() % 6) n++; // skip Sat (6) and Sun (0)
+  }
+  return d.toISOString().slice(0, 10);
 }
 
 export async function applyLedger(ledger) {
@@ -104,18 +116,19 @@ export async function applyLedger(ledger) {
     const curState = cur?.state.name;
     const state = o.status === "done" ? "Done" : o.status === "open" && curState === "In Progress" ? "In Progress" : "Todo";
     const keep = (cur?.labels.nodes ?? []).map((l) => l.id).filter((id) => !ownerIds.has(id) && id !== labels[AI]);
+    const due = o.due ?? cur?.dueDate ?? aiTarget();
     const want = {
       labelIds: [...keep, labels[PERSONAS[o.owner].label], labels[AI]],
-      description: withBlock(cur?.description, o),
+      description: withBlock(cur?.description, o, due),
       stateId: await stateId(state),
-      ...(o.due ? { dueDate: o.due } : {}),
+      dueDate: due,
     };
     let action = "unchanged";
     if (!cur) {
       cur = await createIssue({ title: `[AI] ${o.title}`, ...want });
       action = "created";
     } else {
-      const same = curState === state && (!o.due || cur.dueDate === o.due) && (cur.description ?? "").trim() === want.description &&
+      const same = curState === state && cur.dueDate === due && (cur.description ?? "").trim() === want.description &&
         [...want.labelIds].sort().join() === cur.labels.nodes.map((l) => l.id).sort().join();
       if (!same) (cur = await updateIssue(cur.id, want)), (action = "updated");
     }
@@ -127,6 +140,13 @@ export async function applyLedger(ledger) {
   for (const f of ledger.linear_fixes ?? []) {
     if (!seeded[f.linear_id]) continue;
     await comment(seeded[f.linear_id].id, `AI-handover fix: ${f.fix}\n\nSources: ${f.sources.join(", ")}\n\nmarker: fix:${f.linear_id}`);
+    // Duplicates get closed, so the board only shows real work.
+    if (/duplicate/i.test(f.fix)) {
+      const s = (await team()).states.nodes;
+      const dup = s.find((x) => x.name === "Duplicate") ?? s.find((x) => x.name === "Canceled");
+      const cur = issues.find((i) => i.id === seeded[f.linear_id].id);
+      if (dup && cur?.state.name !== dup.name) await updateIssue(cur.id, { stateId: dup.id });
+    }
   }
   return out;
 }

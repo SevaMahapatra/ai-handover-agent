@@ -48,6 +48,23 @@ export async function runCycle({ reason = "manual", now = new Date() } = {}) {
   const out = { posted: [], drafts: [], handovers: [], comments: [], flags: [] };
   const slack = (what, s) => !s.existed && out.posted.push({ type: "slack", what, link: s.permalink });
 
+  // 1b. Every open issue carries a handover note from the moment it exists, not only after a shift change.
+  const bare = open.filter((o) => !info[o.key].comments.some((c) => c.body.includes("**Handover from")));
+  const doneBare = bare.length ? await doneNotes(bare, byRef) : {};
+  for (const o of bare) {
+    const p = PERSONAS[o.owner];
+    let d = doneBare[o.key] ?? { done: "Nothing done yet per the sources.", refs: [] };
+    const flags = honesty(`handover ${o.key}`, d.done, [], citedText(o.sources, byRef));
+    if (flags.length) (out.flags.push(...flags), (d = { done: "(held back: the summary failed the honesty check)", refs: [] }));
+    const body = [`**Handover from ${p.aiName}** (first note: picked up from the dispatcher) at ${clock(o.owner)}${simulated ? " (simulated clock)" : ""}`,
+      `**Done:** ${d.done}${d.refs.length ? ` (${d.refs.join(", ")})` : ""}`,
+      `**Next:** ${o.next_step}`, `**Why:** ${o.why}`, `**Waiting on:** ${o.needs_human ?? o.owed_to}`,
+      `**Due:** ${o.due ?? "AI target on this issue (no deadline in the sources)"}`, `marker: handover:${o.key}:init`].join("\n\n");
+    const c = await comment(info[o.key].id, body);
+    info[o.key].comments.push({ body, url: c.url, createdAt: new Date().toISOString() });
+    out.handovers.push({ personId: o.owner, key: o.key, what: `${issueOf[o.key].identifier} first handover note`, link: c.url });
+  }
+
   // 2. HANDOVER: a person goes off shift -> a done/next/why note on each open issue + one summary in #handover.
   for (const t of shifts.transitions.filter((t) => t.to === "off")) {
     const p = PERSONAS[t.personId], mine = open.filter((o) => o.owner === t.personId);
