@@ -1,0 +1,5 @@
+# Gitignored files copied into every new worktree (gitignore syntax).
+.env
+.env.local
+.env.*.local
+.vercel/

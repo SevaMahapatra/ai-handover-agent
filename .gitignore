@@ -2,3 +2,7 @@ node_modules/
 .env
 vision/out/
 kit/out/
+.claude/worktrees/
+.vercel/
+.env.local
+.env.*.local

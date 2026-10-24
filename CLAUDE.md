@@ -27,3 +27,11 @@ Stack: Node 24 (Python is NOT installed). Run commands from the repo root; `.env
 - If an API call fails, show the raw error before trying a fix.
 - Demo rule: every feature must trigger something visible on a real phone or in a real inbox.
 - Gotcha: new worktrees need `.env` copied in and their own `npm install`. Each dev server needs a different port.
+
+## Parallel work
+- Any goal with 2+ independent parts: use `/parallel`, not sequential building. Agents: builder, researcher, verifier, simplifier.
+- Use `researcher` subagents for API docs and log-heavy digging, so the main context stays clean.
+- One dev server per port: main uses 3000 and runs the demo; builders use 3101-3103, the verifier 3900.
+- Worktrees branch from local HEAD: commit anything builders need before spawning them.
+- Always verify by running the code. Commit after every working step.
+- Start large tasks in plan mode. I may /clear between tasks, so keep state in files (CLAUDE.md, DEMO.md, git log), not the conversation.
