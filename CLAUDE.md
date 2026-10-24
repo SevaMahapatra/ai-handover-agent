@@ -5,7 +5,7 @@ Stack: Node 24 (Python is NOT installed). Run commands from the repo root; `.env
 
 ## Commands
 - Vision loop: `node vision/live.js [rules.json] [webcam|file.mp4]` · preflight: `./preflight.sh` · judge chat ID: `node scripts/chat-id.js`
-- Dev server, deploy, ngrok: not built yet (ngrok not installed). Add the exact commands here once they exist.
+- Dev server: `node server.js` (PORT=3001 for a 2nd worktree) · ngrok: `ngrok http 3000` (not installed: `winget install ngrok.ngrok`) · deploy: `npx vercel --prod`
 
 ## Kit functions
 | Function | File | Test |
@@ -14,12 +14,12 @@ Stack: Node 24 (Python is NOT installed). Run commands from the repo root; `.env
 | `analyzeFrame(image, rules)` | vision/analyze.js | `node vision/analyze.js vision/out/frame_0.jpg` |
 | `sopToRules(pdfOrText)` | vision/sop.js | `node vision/sop.js vision/samples/sop.txt` |
 | `alert(event)` | vision/alert.js | `node vision/alert.js` |
-| `logEvent()` / `eventsSince()` | vision/log.js | run live.js, then open vision/out/events.json |
 | `shiftSummary(minutes)` | vision/summary.js | `node vision/summary.js 60` |
-| send / call / book / ship | not built yet | |
+| `scrapeUrl(url)` | kit/scrape.js | `node kit/scrape.js <url>` |
+| inbound SMS/call webhook | api/inbound.js | `curl -X POST localhost:3000/api/inbound -d "From=+1555&Body=hi"` |
 
 ## .env (names only; never print values)
-No `.env` yet. Expected keys, per .env.example: `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `VISION_PROVIDER`.
+`.env` is EMPTY. Expected keys, per .env.example: `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `VISION_PROVIDER`.
 
 ## Rules
 - Do the simplest thing that works live. No auth, tests, or DB unless asked.
