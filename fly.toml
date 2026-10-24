@@ -1,0 +1,18 @@
+# Fly.io: one always-on worker (no [http_service], so Fly never auto-stops it). See DEPLOY.md.
+# `app` must be globally unique: change it if `fly launch` says the name is taken.
+app = "zapdemo-handover-ai"
+primary_region = "dfw" # Dallas, near Austin
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  CYCLE_MINUTES = "5"
+
+[mounts]
+  source = "handover_state"
+  destination = "/app/state"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

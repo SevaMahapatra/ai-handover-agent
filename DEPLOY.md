@@ -18,7 +18,16 @@ node scripts/supervise.js
 - Refuses to start a second copy (`state/supervisor.lock`).
 - Stop it with Ctrl+C, or `taskkill /PID <pid in state/supervisor.lock> /T /F`.
 
-## Later: cloud (Railway shown; Fly.io or Render work the same way)
+## Cloud option A: Fly.io (fly.toml is ready)
+1. Install the CLI (no Docker/Python needed): PowerShell `iwr https://fly.io/install.ps1 -useb | iex`, then open a new terminal.
+2. `fly auth signup` or `fly auth login` (GitHub/email if Google fails; new orgs need a card). Or create a token in the dashboard and set `FLY_API_TOKEN`.
+3. `fly apps create zapdemo-handover-ai` (rename in fly.toml if taken) -> `fly volumes create handover_state --region dfw --size 1`.
+4. `fly secrets import < .env` (every key in .env becomes a secret).
+5. `fly deploy` (remote build of the Dockerfile) -> `fly logs` until `socket: connected`.
+6. Seed the ledger: `fly ssh sftp shell` -> `put state/ledger.json /app/state/ledger.json`, then `fly machine restart`.
+7. Stop the laptop supervisor (one listener only). Restart test: `fly machine restart`, and the logs show it resumes with 0 duplicate posts.
+
+## Cloud option B: Railway
 The Dockerfile here is UNTESTED: Docker wasn't available on the build laptop. Expect to fix small things on the first deploy.
 1. **Seed the state.** A fresh container with an empty `state/` would rebuild the ledger from scratch (~100s), and new obligation keys could create duplicate `[AI]` issues in Linear. Upload the current `state/ledger.json` to the volume before the first start. Drafts and shift state rebuild themselves from Slack/Linear.
 2. **Install the CLI and log in:** `npm i -g @railway/cli` -> `railway login` -> `railway init` (new project).
