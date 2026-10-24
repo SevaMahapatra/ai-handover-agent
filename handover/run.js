@@ -30,13 +30,16 @@ async function doneNotes(obls, byRef) {
   return Object.fromEntries(r.items.map((i) => [i.key, i]));
 }
 
-export async function runCycle({ reason = "manual", now = new Date() } = {}) {
+export async function runCycle({ reason = "manual", now } = {}) {
+  // Simulated only when a clock was passed in (--now) AND it's off from real time. Checked BEFORE the slow steps:
+  // a long full dispatch used to make a real cycle look "simulated" by the time it posted.
+  const simulated = !!now && Math.abs(now - Date.now()) > 2 * 60 * 1000;
+  now ??= new Date();
   const r = await update();
   const ledger = r.full ?? r.ledger ?? JSON.parse(fs.readFileSync(LEDGER, "utf8"));
   const issues = await applyLedger(ledger);
 
   const shifts = shiftChanges(now);
-  const simulated = Math.abs(now - Date.now()) > 2 * 60 * 1000;
   const mode = simulated ? "sim" : "live"; // simulated rehearsals never block tonight's real shift changes
   const clock = (pid) => local(now, PERSONAS[pid].tz).label;
   const note = (pid) => (simulated ? `\n_(simulated clock: ${clock(pid)})_` : "");
@@ -136,8 +139,8 @@ if (import.meta.filename === process.argv[1]) {
   const { cli } = await import("../kit/env.js");
   cli(async () => {
     const i = process.argv.indexOf("--now");
-    const now = i > 0 ? new Date(process.argv[i + 1]) : new Date();
-    if (isNaN(now)) throw new Error(`bad --now value "${process.argv[i + 1]}" (want ISO, e.g. 2026-10-24T19:30:00-05:00)`);
+    const now = i > 0 ? new Date(process.argv[i + 1]) : undefined;
+    if (now && isNaN(now)) throw new Error(`bad --now value "${process.argv[i + 1]}" (want ISO, e.g. 2026-10-24T19:30:00-05:00)`);
     const r = await runCycle({ reason: "cli", now });
     console.log(`clock: ${r.now}${r.simulated ? " (SIMULATED)" : ""} · ${r.first ? "first run: shift state recorded, no transitions" : `transitions: ${r.transitions.map((t) => `${t.personId} ${t.to}`).join(", ") || "none"}`}`);
     for (const e of [...r.handovers, ...r.comments, ...r.drafts, ...r.posted]) console.log(`+ ${e.what}: ${e.link}`);
