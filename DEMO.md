@@ -29,7 +29,7 @@ Start `node handover/listen.js` before 8:30, then keep your hands off the keyboa
 2. **(40s) A call ends.** Notes land in Granola. Click the Linear tasks: layout → Engineer, price → Founder, invite → Sales caller.
 3. **(30s) People hear about it.** Click the Slack update and show WhatsApp on the phone.
 4. **(30s) Things go out.** Click the follow-up email (it says it's from an AI) and the calendar invite.
-5. **(40s) The shift changes.** [SHIFT] → Singapore's AI picks up the Engineer's task and finishes it. Click the result.
+5. **(40s) The shift changes.** At 8:00pm Austin, Sam's and Dana's AIs posted handover notes, and since 7:00pm Singapore's AI picks up the Engineer's task and finishes it. Click the result.
 6. **(20s) Why it's organized this way,** and "every item links back to a line in the call notes."
 
 ## Fallbacks (label them out loud, never fake them)
