@@ -12,6 +12,7 @@ import { postAs, ensureChannels } from "../kit/slack.js";
 import { sendEmail } from "../kit/email.js";
 import { runCycle } from "./run.js";
 import { findBySlackTs, markDraft } from "./drafts.js";
+import { onQueueReaction, onQueueReply, setQueueCycle, queueDraftFor } from "./queue.js";
 import { CHANNELS } from "./personas.js";
 import { LEDGER } from "./dispatch.js";
 import { askJSON } from "../vision/claude.js";
@@ -50,6 +51,7 @@ export function queueCycle(reason) {
   chain = p.catch((e) => log("cycle.error", `(${reason}) ${e.stack ?? e}`));
   return p;
 }
+setQueueCycle(queueCycle); // the decision queue (handover/queue.js) kicks a cycle after each tap/answer
 
 // ---- event handlers ----
 async function userName(id) {
@@ -105,28 +107,31 @@ async function onQuestion(ev) {
 
 async function onReaction(ev) {
   const ts = ev.item?.ts;
-  const d = ts && findBySlackTs(ts);
+  if (await onQueueReaction(ev)) return;
+  const q = ts && !findBySlackTs(ts) ? queueDraftFor(ts) : null; // ✅ on a decision-queue "send" item -> this same draft path
+  const d = ts && (findBySlackTs(ts) ?? q?.draft);
   if (!d) return log("reaction", `:${ev.reaction}: on ${ts}: not a draft, ignored`);
   if (d.status !== "pending") return log("reaction", `:${ev.reaction}: on draft ${d.id}: already ${d.status}, ignored`);
   const channel = d.slack?.channel ?? ev.item.channel;
+  const thread = q?.thread_ts ?? ts;
   if (ev.reaction === "white_check_mark") {
     // Drafts can carry placeholders like [PRICE: Sam to decide]; never send those, a human has to fill them in first.
     const p = d.payload;
     const holes = [...new Set(JSON.stringify([p.intendedTo, p.cc, p.subject, p.text]).match(/\[[A-Z][A-Z _/-]*:[^\]]*\]/g) ?? [])];
     if (holes.length) {
-      const reply = await postAs(d.personId, channel, `Not sent: this draft still has placeholders a human must fill first: ${holes.join(" ")}`, { thread_ts: ts });
+      const reply = await postAs(d.personId, channel, `Not sent: this draft still has placeholders a human must fill first: ${holes.join(" ")}`, { thread_ts: thread });
       log("draft.blocked", `${d.id}: ${holes.join(" ")}`, reply.permalink);
       return reply;
     }
     const result = await sendEmail(d.payload);
     markDraft(d.id, "sent", result);
-    const reply = await postAs(d.personId, channel, `Sent :white_check_mark: ${result.gmailUrl}`, { thread_ts: ts });
+    const reply = await postAs(d.personId, channel, `Sent :white_check_mark: ${result.gmailUrl}`, { thread_ts: thread });
     log("draft.sent", `${d.id} as ${d.personId} ${result.gmailUrl}`, reply.permalink);
     return reply;
   }
   if (ev.reaction === "x") {
     markDraft(d.id, "discarded");
-    const reply = await postAs(d.personId, channel, "Discarded.", { thread_ts: ts });
+    const reply = await postAs(d.personId, channel, "Discarded.", { thread_ts: thread });
     log("draft.discarded", d.id, reply.permalink);
     return reply;
   }
@@ -144,7 +149,8 @@ export async function handleEvent(ev) {
     if (ev.type === "reaction_added") return await onReaction(ev);
     if (ev.type === "message") {
       if (ev.channel_type === "im") return await onQuestion(ev);
-      const { drops } = await channels();
+      const { drops, handover } = await channels();
+      if (ev.channel === handover && ev.thread_ts && ev.thread_ts !== ev.ts && !ev.subtype && (await onQueueReply(ev))) return;
       if (ev.channel === drops && !ev.subtype && !(ev.text ?? "").includes(`<@${bot}>`)) return await onDrop(ev);
       return log("message", `in ${ev.channel}: not a drop, ignored`);
     }
