@@ -1,7 +1,7 @@
 # Demo runbook: The 24/7 Handover
 Schedule: 3:00 doors · **4:30 / 6:00 / 7:30** check-ins (they restart the AI fresh: carries on = bell, stuck or asks = drink) · **8:30 hands off** (3 min, live, nobody touches the keyboard) · winner at 9.
 
-Fill these in once they exist:
+Key facts:
 - **Start command:** `node handover/listen.js` (resumes from state/ + Linear + Slack; reruns create nothing twice)
 - **Trigger:** paste the hosts' drop into Slack `#drops` (a phone works, so no keyboard). The Lead AI replies in the thread with what changed.
 - **Shift change:** real clock, 08:00–20:00 local per person. 7:00pm Austin = Wei Lin + Priya ON (pick up); 8:00pm Austin = Sam + Dana OFF (handover notes). Rehearse with `node handover/run.js --now <ISO>` (labelled simulated).
@@ -9,10 +9,10 @@ Fill these in once they exist:
 
 ## Before every check-in (T-10 min)
 1. `./preflight.sh`: everything you'll use must be PASS.
-2. Rehearse the restart once: kill all agent processes, run `[START]`, and confirm it resumes without asking.
+2. Rehearse the restart once: kill all agent processes, run `node handover/listen.js`, and confirm it resumes without asking.
 3. Have these open:
-   - **Terminal**: `[START]` typed in, big font. One terminal per person's AI if they run separately.
-   - **Browser tabs**: the Linear board (filtered to this loop), the Slack channel, the inbox, the calendar week view, and `/status` (the handover ledger).
+   - **Terminal**: `node handover/listen.js` typed in, big font. One terminal per person's AI if they run separately.
+   - **Browser tabs**: the Linear board (filtered to this loop), the Slack channel, the inbox, the calendar week view (/status is not used tonight).
    - **Phone**: WhatsApp with the Twilio sandbox chat open, for the Singapore message.
 
 ## Check-in script (60s)
@@ -24,7 +24,7 @@ They restart it. It carries on: point at the **[NEW LINEAR ISSUE / SLACK MESSAGE
 If it stalls, say so. Honesty is judged.
 
 ## 8:30 final demo (3 min, hands off)
-Start `[START]` before 8:30, then keep your hands off the keyboard.
+Start `node handover/listen.js` before 8:30, then keep your hands off the keyboard.
 1. **(20s) The problem, in their words.** "6pm Austin, a warehouse lead wants a layout and a price by Thursday. Austin logs off, Singapore wakes up. Who knows what's owed?"
 2. **(40s) A call ends.** Notes land in Granola. Click the Linear tasks: layout → Engineer, price → Founder, invite → Sales caller.
 3. **(30s) People hear about it.** Click the Slack update and show WhatsApp on the phone.
