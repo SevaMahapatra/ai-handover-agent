@@ -4,7 +4,7 @@ Kit for building live AI demos fast. Likely theme: operational intelligence (fac
 Stack: Node 24 (Python is NOT installed). Run commands from the repo root; `.env` is read from cwd.
 
 ## Commands
-- Vision loop: `node vision/live.js [rules.json] [webcam|file.mp4]`
+- Vision loop: `node vision/live.js [rules.json] [webcam|file.mp4]` · preflight: `./preflight.sh` · judge chat ID: `node scripts/chat-id.js`
 - Dev server, deploy, ngrok: not built yet (ngrok not installed). Add the exact commands here once they exist.
 
 ## Kit functions

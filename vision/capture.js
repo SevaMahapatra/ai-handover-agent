@@ -5,7 +5,7 @@ import ffmpegPath from "ffmpeg-static";
 export const WEBCAM = "Integrated Webcam"; // from: ffmpeg -list_devices true -f dshow -i dummy
 
 function inputArgs(source) {
-  if (source === "webcam") return ["-f", "dshow", "-i", `video=${WEBCAM}`];
+  if (source === "webcam") return ["-f", "dshow", "-rtbufsize", "100M", "-i", `video=${WEBCAM}`];
   return ["-re", "-i", source]; // -re: read file at real speed so it behaves like a live feed
 }
 
@@ -41,10 +41,14 @@ export async function* frames(source, everySec = 3, { width = 960, realtime = tr
 export async function grabOne(source = "webcam") {
   const args = ["-hide_banner", "-loglevel", "error", ...(source === "webcam" ? inputArgs(source) : ["-i", source]),
     ...(source === "webcam" ? ["-ss", "1.5"] : []), "-frames:v", "1", "-vf", "scale=960:-2", "-f", "image2pipe", "-c:v", "mjpeg", "-"];
-  const ff = spawn(ffmpegPath, args, { stdio: ["ignore", "pipe", "inherit"] });
+  const ff = spawn(ffmpegPath, args, { stdio: ["ignore", "pipe", "pipe"] });
+  let err = "";
+  ff.stderr.on("data", (d) => (err += d));
   const parts = [];
   for await (const c of ff.stdout) parts.push(c);
-  return Buffer.concat(parts);
+  const jpg = Buffer.concat(parts);
+  if (!jpg.length) throw new Error(`ffmpeg: ${err.trim().split("\n").pop() || "no frame"}`);
+  return jpg;
 }
 
 // CLI: node vision/capture.js <webcam|file> [everySec] [count]
