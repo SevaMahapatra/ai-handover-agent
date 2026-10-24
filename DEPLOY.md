@@ -18,23 +18,14 @@ node scripts/supervise.js
 - Refuses to start a second copy (`state/supervisor.lock`).
 - Stop it with Ctrl+C, or `taskkill /PID <pid in state/supervisor.lock> /T /F`.
 
-## Cloud option A: Fly.io (fly.toml is ready)
-1. Install the CLI (no Docker/Python needed): PowerShell `iwr https://fly.io/install.ps1 -useb | iex`, then open a new terminal.
-2. `fly auth signup` or `fly auth login` (GitHub/email if Google fails; new orgs need a card). Or create a token in the dashboard and set `FLY_API_TOKEN`.
-3. `fly apps create zapdemo-handover-ai` (rename in fly.toml if taken) -> `fly volumes create handover_state --region dfw --size 1`.
-4. `fly secrets import < .env` (every key in .env becomes a secret).
-5. `fly deploy` (remote build of the Dockerfile) -> `fly logs` until `socket: connected`.
-6. No manual seeding: on an empty volume, the container copies `deploy/ledger.seed.json` in before the listener starts. Refresh the seed before deploying: `cp state/ledger.json deploy/ledger.seed.json`.
-7. Stop the laptop supervisor (one listener only). Restart test: `fly machine restart`, and the logs show it resumes with 0 duplicate posts.
-
-## Cloud option B: Railway
+## Later, optional: cloud (Railway shown; any always-on container host works)
 The Dockerfile here is UNTESTED: Docker wasn't available on the build laptop. Expect to fix small things on the first deploy.
-1. **Seed the state.** A fresh container with an empty `state/` would rebuild the ledger from scratch (~100s), and new obligation keys could create duplicate `[AI]` issues in Linear. Upload the current `state/ledger.json` to the volume before the first start. Drafts and shift state rebuild themselves from Slack/Linear.
-2. **Install the CLI and log in:** `npm i -g @railway/cli` -> `railway login` -> `railway init` (new project).
-3. **Variables:** paste the contents of `.env` into the service's Variables (Raw Editor), or `railway variables --set KEY=value` per key. Needed: ANTHROPIC_API_KEY, LINEAR_API_KEY, SLACK_BOT_TOKEN, SLACK_APP_TOKEN, GMAIL_USER, GMAIL_APP_PASSWORD, MY_EMAIL, and optionally CYCLE_MINUTES.
-4. **Volume:** add a volume mounted at `/app/state`.
-5. **Deploy:** `railway up` (builds the Dockerfile). Watch the logs for `socket: connected` and the startup `cycle:` line.
-6. **Stop the laptop supervisor**, so only one listener is running.
+On an empty volume, the container copies `deploy/ledger.seed.json` in before the listener starts, so no manual seeding is needed. Refresh the seed before deploying: `cp state/ledger.json deploy/ledger.seed.json`.
+1. **Install the CLI and log in:** `npm i -g @railway/cli` -> `railway login` -> `railway init` (new project).
+2. **Variables:** paste the contents of `.env` into the service's Variables (Raw Editor), or `railway variables --set KEY=value` per key. Needed: ANTHROPIC_API_KEY, LINEAR_API_KEY, SLACK_BOT_TOKEN, SLACK_APP_TOKEN, GMAIL_USER, GMAIL_APP_PASSWORD, MY_EMAIL, and optionally CYCLE_MINUTES.
+3. **Volume:** add a volume mounted at `/app/state`.
+4. **Deploy:** `railway up` (builds the Dockerfile). Watch the logs for `socket: connected` and the startup `cycle:` line.
+5. **Stop the laptop supervisor**, so only one listener is running.
 
 Cost and limits: whatever the host charges for one small always-on container. It's idle except for cycles; each cycle is a few Claude calls, plus up to 6 work items per person on shift.
 
