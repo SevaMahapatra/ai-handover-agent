@@ -8,12 +8,13 @@ import { ensureChannels, findMessage } from "../../kit/slack.js";
 import { addDraft, setSlack } from "../drafts.js";
 import { PERSONAS, CHANNELS, LINEAR_TEAM_KEY } from "../personas.js";
 import { say, link, honesty, citedText } from "../work.js";
-import { scenarioCli } from "./index.js";
+import { scenarioCli, keyFor } from "./index.js";
 
 export const id = "hiring-onboarding";
 export const scenario = 5;
 const CLI = import.meta.filename === process.argv[1];
-const KEY = "jordan-onboarding", OWNER = "weilin", DUE = "2026-10-26"; // C04: "starts Monday 26 Oct, 9am Austin"
+let KEY = "jordan-onboarding"; // resolved from pack id ZAP-130 in run()
+const OWNER = "weilin", DUE = "2026-10-26"; // C04: "starts Monday 26 Oct, 9am Austin"
 const JORDAN = "jordan.lee@mail.example"; // E06
 // One item per thing named in C04. Owners by role (team.json owns): onboarding -> weilin, approvals and payments -> sam.
 const CHECKLIST = [
@@ -43,6 +44,7 @@ async function children(parentId) {
 }
 
 export async function run(ctx) {
+  KEY = keyFor(ctx, "ZAP-130", KEY);
   const o = ctx.open.find((x) => x.key === KEY || x.linear_ids?.includes("ZAP-130"));
   if (!o) return [{ type: "linear", what: "no open onboarding obligation (ZAP-130) in the ledger; nothing to do", link: "" }];
   const issue = { ...ctx.issueOf[o.key], id: ctx.info[o.key].id }, p = PERSONAS[OWNER], effects = [];
@@ -66,6 +68,16 @@ export async function run(ctx) {
     }
   }
   if (CLI) for (const c of have.filter((c) => CHECKLIST.some(([t]) => t === c.title))) console.log(`  checklist: ${c.identifier} ${c.title} ${c.url}`);
+
+  // 1b. Every task carries a handover note, sub-issues too (comment() dedupes on the marker).
+  for (const c of have.filter((c) => CHECKLIST.some(([t]) => t === c.title))) {
+    const who = PERSONAS[CHECKLIST.find(([t]) => t === c.title)[1]];
+    const body = [`**Handover from ${who.aiName}** (first note: from the onboarding checklist)`, `**Done:** Nothing done yet per the sources.`,
+      `**Next:** ${c.title} for Jordan Lee before he starts.`, `**Why:** Jordan starts Monday 26 Oct, 9am Austin, and has received no logins or first-day details (C04, E06).`,
+      `**Waiting on:** ${who.name}`, `**Due:** ${DUE} (from C04)`, `marker: handover:${c.identifier}:init`].join("\n\n");
+    if (ctx.dry) effects.push({ type: "linear", what: `handover note on ${c.identifier}`, link: "(dry)" });
+    else { const r = await comment(c.id, body); if (!r.existed) effects.push({ type: "linear", what: `handover note on ${c.identifier}`, link: r.url }); }
+  }
 
   // 3. "Advance or decline for the founder" doesn't apply: say so once, so nobody thinks it was forgotten.
   const naMarker = `marker: scn:${id}:no-candidates`;

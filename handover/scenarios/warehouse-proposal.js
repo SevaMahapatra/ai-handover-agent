@@ -8,12 +8,13 @@ import { findMessage, ensureChannels } from "../../kit/slack.js";
 import { addDraft, getDraft, setSlack } from "../drafts.js";
 import { PERSONAS, CHANNELS } from "../personas.js";
 import { say, link, honesty, citedText } from "../work.js";
-import { scenarioCli } from "./index.js";
+import { scenarioCli, keyFor } from "./index.js";
 
 export const id = "warehouse-proposal";
 export const scenario = 3;
 
-const KEY = "northwind-price", OWNER = "sam", TO = "maria.gomez@northwind-cold.example";
+let KEY = "northwind-price"; // resolved from pack id ZAP-102 in run()
+const OWNER = "sam", TO = "maria.gomez@northwind-cold.example";
 const REFS = ["C01", "E01", "E03", "E15", "S03", "S04", "C09", "E10", "ZAP-101", "ZAP-102", "ZAP-103", "ZAP-104", "ZAP-105"];
 const PLACEHOLDER = "[PRICE: Sam to decide]", TOKEN = "{{PRICE}}";
 const NO_RULES = "No pricing rules in the work pack, so I can't compute a price. The supplier quote ($4,680, C09/E10) is our cost, not a price. Waiting on Sam via the decision queue.";
@@ -39,6 +40,7 @@ raised across the sources (C01, E03, E15). Rules:
 - Only facts from the sources. Short and usable. sources = refs you used.`;
 
 export async function run(ctx) {
+  KEY = keyFor(ctx, "ZAP-102", KEY);
   const o = ctx.ledger.obligations.find((x) => x.key === KEY), issue = ctx.issueOf[KEY], info = ctx.info[KEY];
   if (!o || o.status === "done" || !issue || !info) return [];
   if (!ctx.dry && !ctx.onShift(OWNER)) return [];

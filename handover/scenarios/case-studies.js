@@ -7,11 +7,12 @@ import { ensureChannels } from "../../kit/slack.js";
 import { honesty, citedText, say, link, workMarker } from "../work.js";
 import { addDraft, listDrafts, setSlack } from "../drafts.js";
 import { PERSONAS, CHANNELS } from "../personas.js";
-import { scenarioCli } from "./index.js";
+import { scenarioCli, keyFor } from "./index.js";
 
 export const id = "case-studies";
 export const scenario = 10;
-const OWNER = "priya", CS = "bayview-case-study", LI = "linkedin-post-monday";
+const OWNER = "priya";
+let CS = "bayview-case-study", LI = "linkedin-post-monday"; // resolved from pack ids ZAP-170 / ZAP-171 in run()
 const REFS = ["C08", "E14", "S10", "ZAP-170", "ZAP-171", "C05", "E07", "S14", "W04"];
 const LISA = "lisa.park@bayview-freight.example";
 const M = (what) => `scn:case-studies:${what}`;
@@ -23,6 +24,8 @@ const approval = (sources) => sources.find((s) => (s.kind === "decision" || s.ki
   && !/\b(not|hasn't|has not|until|before|pending|waiting)\b[^.]*\bapprov/i.test(s.text));
 
 export async function run(ctx) {
+  CS = keyFor(ctx, "ZAP-170", CS);
+  LI = keyFor(ctx, "ZAP-171", LI);
   const p = PERSONAS[OWNER], out = [], csI = ctx.issueOf[CS], liI = ctx.issueOf[LI];
   if (!csI || !liI) return [{ type: "linear", what: `skipped: no Linear issue for ${!csI ? CS : LI} in the ledger`, link: "" }];
   if (!ctx.dry && !ctx.onShift(OWNER)) return [];

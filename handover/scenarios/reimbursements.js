@@ -9,7 +9,7 @@ import { LINEAR_TEAM_KEY } from "../personas.js";
 
 export const id = "reimbursements";
 export const scenario = 9;
-const KEY = "weilin-reimbursement";
+let KEY = "weilin-reimbursement"; // resolved from pack id ZAP-160 in run()
 const CLAIM_REFS = ["C10", "S09"];
 const M = (what) => `scn:${id}:${what}`;
 
@@ -33,6 +33,7 @@ async function markDone(identifier) {
 }
 
 export async function run(ctx) {
+  KEY = (await import("./index.js")).keyFor(ctx, "ZAP-160", KEY);
   const ob = ctx.ledger.obligations.find((o) => o.key === KEY), ref = ctx.issueOf[KEY];
   if (!ob || !ref) return [{ type: "linear", what: `no ledger obligation / Linear issue for ${KEY}; nothing to do`, link: "" }];
   const issue = ctx.info[KEY] ?? (await linearIssue(ref.identifier));

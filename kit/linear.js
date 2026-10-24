@@ -160,7 +160,7 @@ export async function comment(issueId, body) {
     const d = await gql(`query($id: String!) { issue(id: $id) { team { key } comments(first: 250) { nodes { body url } } } }`, { id: issueId });
     if (d.issue.team.key !== LINEAR_TEAM_KEY) throw new Error(`refusing to comment outside team ${LINEAR_TEAM_KEY}`);
     const hit = d.issue.comments.nodes.find((c) => c.body.includes(marker));
-    if (hit) return { url: hit.url };
+    if (hit) return { url: hit.url, existed: true };
   }
   const r = await gql(`mutation($i: CommentCreateInput!) { commentCreate(input: $i) { comment { url } } }`, { i: { issueId, body } });
   logKitEvent("linear.commented", `Comment on ${issueId}: ${body.slice(0, 60)}`, { url: r.commentCreate.comment.url });

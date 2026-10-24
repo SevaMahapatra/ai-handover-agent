@@ -50,6 +50,11 @@ export async function runScenarios(ctx) {
   return out;
 }
 
+// Ledger keys are written by the model and change between rebuilds ("weilin-reimbursement" vs "reimburse-weilin").
+// The work pack's Linear ids are stable, so scenarios resolve their obligation from the pack id. Falls back to `fallback`.
+export const keyFor = (ctx, packId, fallback) =>
+  ctx.ledger.obligations.find((o) => o.linear_ids?.[0] === packId)?.key ?? ctx.ledger.obligations.find((o) => o.linear_ids?.includes(packId))?.key ?? fallback;
+
 // For a scenario's own CLI (`node handover/scenarios/<id>.js [--dry] [--now ISO]`): builds the same ctx runCycle would,
 // without running the dispatcher or any other step.
 export async function buildContext({ now, dry = false } = {}) {
