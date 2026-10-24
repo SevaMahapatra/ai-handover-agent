@@ -114,7 +114,9 @@ export async function applyLedger(ledger) {
     const primary = seeded[o.linear_ids[0]];
     let cur = primary ? issues.find((i) => i.id === primary.id) : issues.find((i) => i.title.startsWith("[AI] ") && i.description?.includes(`ledger-key: ${o.key}`));
     const curState = cur?.state.name;
-    const state = o.status === "done" ? "Done" : o.status === "open" && curState === "In Progress" ? "In Progress" : "Todo";
+    // Closing sticks: an issue a person or an AI moved to Done/Canceled is never reopened by a later sync.
+    const state = ["Done", "Canceled"].includes(curState) ? curState
+      : o.status === "done" ? "Done" : o.status === "open" && curState === "In Progress" ? "In Progress" : "Todo";
     const keep = (cur?.labels.nodes ?? []).map((l) => l.id).filter((id) => !ownerIds.has(id) && id !== labels[AI]);
     const due = o.due ?? cur?.dueDate ?? aiTarget();
     const want = {
