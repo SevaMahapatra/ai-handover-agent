@@ -1,0 +1,43 @@
+# Slack app manifest for the handover bot. api.slack.com/apps -> Create New App -> From a manifest -> pick your TEST workspace -> paste this.
+# Existing app: left sidebar -> App Manifest -> replace with this -> Save.
+display_information:
+  name: Handover AI
+  description: Each teammate's AI assistant. Tracks what's owed and hands work off at shift change. This is an AI.
+features:
+  app_home:
+    home_tab_enabled: false
+    messages_tab_enabled: true
+    messages_tab_read_only_enabled: false
+  bot_user:
+    display_name: Handover AI
+    always_online: true
+oauth_config:
+  scopes:
+    # "What it can do in Slack": bot token scopes only, no user scopes
+    bot:
+      - app_mentions:read
+      - channels:history
+      - channels:join
+      - channels:manage
+      - channels:read
+      - chat:write
+      - chat:write.customize
+      - im:history
+      - im:read
+      - im:write
+      - reactions:read
+      - reactions:write
+      - users:read
+settings:
+  # "What it can respond to in Slack": bot events only, no workspace (user) events
+  event_subscriptions:
+    bot_events:
+      - app_mention
+      - message.channels
+      - message.im
+      - reaction_added
+  interactivity:
+    is_enabled: false
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false
