@@ -1,0 +1,10 @@
+node_modules
+.git
+.env
+.env.*
+state
+vision/out
+kit/out
+.claude/worktrees
+artifacts
+*.log

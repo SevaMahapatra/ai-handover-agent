@@ -10,13 +10,13 @@
 - **Stack:** Node 24 (Python is NOT installed). Run commands from the repo root; `.env` is read from cwd.
 
 ## Commands
-- Preflight: `./preflight.sh` · demo runbook: DEMO.md · prompt templates: PROMPTS.md
-- `.env`: key names only, never print values. Placeholders count as unset (`requireEnv`, kit/env.js). Slack uses Socket Mode: no ngrok or deploy.
+- **Run it (tonight's deployment):** `node scripts/supervise.js` (keeps PC awake, restarts on crash, one instance only, log: state/listen.log). Stop: Ctrl+C or `taskkill /PID <pid in state/supervisor.lock> /T /F`.
+- Preflight: `./preflight.sh` · demo runbook: DEMO.md · prompt templates: PROMPTS.md · cloud: DEPLOY.md
+- `.env`: key names only, never print values. Placeholders count as unset (`requireEnv`, kit/env.js). Slack uses Socket Mode (outbound only), so run ONE listener at a time.
 
 ## Kit functions
 | Function | File | Test |
 |---|---|---|
-| `sendWhatsApp(text, to?)` | kit/whatsapp.js | `node kit/whatsapp.js "hi"` (recipient must join the Twilio sandbox first) |
 | Dispatcher: sources -> `state/ledger.json` (owners, citations, honesty audit) | handover/dispatch.js | `node handover/dispatch.js` (~100s) · drops: `--update` (~17s) |
 | Linear sync, ZAP team only, idempotent | kit/linear.js | `node kit/linear.js` (2nd run: 0 created) |
 | Slack `postAs` / `ensureChannels` / `findMessage` | kit/slack.js | `node kit/slack.js` (#handover, #drops) |
@@ -30,11 +30,10 @@
 - If an API call fails, show the raw error before trying a fix.
 - Demo rule: every step leaves clickable proof in a real tool (a Linear issue, a Slack message, an email, a calendar event), traceable to a source line.
 - Restart-safe: all state lives in files or the tools themselves, never in a process's memory. Resuming must not redo work.
+- Never patch files with `node -e`/heredoc string replaces: a backslash-n escape becomes a real newline and breaks the file (hit 4x). Use the Edit tool.
 - Gotcha: `.claude/agents/` and `.claude/commands/` load at session start, so restart `claude` after editing them.
 
 ## Parallel work
-- Any goal with 2+ independent parts: use `/parallel`, not sequential building. Agents: builder, researcher, verifier, simplifier.
-- Use `researcher` subagents for API docs and log-heavy digging, so the main context stays clean.
-- One dev server per port: main uses 3000 and runs the demo; builders use 3101-3103, the verifier 3900.
+- Any goal with 2+ independent parts: use `/parallel`, not sequential building. Agents: builder, researcher (API docs, log digging), verifier, simplifier.
 - Worktrees branch from local HEAD (commit first) and get `.env` via .worktreeinclude. node_modules is a junction to main's: remove it with `cmd //c rmdir`, never `rm -rf`.
 - Start large tasks in plan mode. I may /clear between tasks: keep progress in files (DEMO.md, git log), not the conversation.
