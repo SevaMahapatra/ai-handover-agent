@@ -1,53 +1,48 @@
-# Prompt templates
-Copy, fill the [BRACKETS], paste. Kit functions are listed in CLAUDE.md.
+# Prompt templates: The 24/7 Handover
+Copy, fill the [BRACKETS], paste. The brief is in CLAUDE.md. Check-ins (a fresh restart in front of everyone) are at 4:30, 6:00 and 7:30. Hands off at 8:30.
 
-## 1. CARD DRAWN (switch to plan mode first: Shift+Tab)
+## 1. KICKOFF (plan mode: Shift+Tab)
 ```
-Card: "[CARD TEXT]"
-Demo moment at 9pm: [WHAT THE JUDGES SEE HAPPEN, e.g. "I hold up a phone, my phone buzzes with the frame"].
-Reuse these kit functions: [e.g. frames, analyzeFrame, alert].
-Plan:
-1. The smallest end-to-end slice with ONE live action on a real phone or inbox, done within 45 minutes.
-2. Three increments, one per 90-minute checkpoint, each demoable on its own.
-For each step: the files it touches, and the command that proves it works.
-Don't write code until I approve the plan.
-```
-
-## 2. OPS-MANAGER FRAMING
-```
-Rewrite what this build does for an operations manager at a [FACTORY / WAREHOUSE / LOGISTICS HUB].
-What it does now: [ONE-LINE DESCRIPTION].
-Speak in their terms: incidents caught, time from event to alert, hours of manual review saved,
-set up by reading their existing safety manual, works with the cameras they already have.
-Give me a one-sentence pitch, three bullets, and one number I can say out loud (estimate it, and say how).
-No AI jargon.
+Card: The 24/7 Handover (summary in CLAUDE.md). Break story to target: [e.g. "the call that ends at night"].
+Organization: [ONE LEAD AI / A TEAM OF PER-PERSON AIS / A SHARED BOARD], because [WHY].
+Plan the smallest loop that works end to end by [TIME]: call notes -> Linear tasks, each with the right owner (Founder, Engineer, Sales caller, Content) -> Slack update -> one follow-up email.
+All state lives in files or the tools themselves, so a fresh restart carries on without asking.
+Then 3 increments, one per check-in: calendar, WhatsApp, the shift-change pickup.
+For each step: the files it touches, the trigger command, and the clickable proof it leaves.
+No code until I approve.
 ```
 
-## 3. CHECKPOINT PUSH (T-20 min)
+## 2. JUDGE FRAMING
 ```
-Checkpoint in 20 minutes. Stop all new features.
-Make the current slice reliable: [THE SLICE, e.g. "webcam -> phone detected -> Telegram alert"].
-Run it 3 times in a row and show the output. Fix only what breaks.
-Then give me the single exact command that triggers the live action, plus what I should see on [PHONE / INBOX].
-Commit when it's green.
+Write the 8:30 pitch for the Zapdos team, who will judge it as their own tool.
+What it does: [ONE LINE]. Organization: [LEAD AI / TEAM / BOARD], and why: [REASON].
+Map it to their real breakages: [e.g. "the call that ends at night", "the proposal stuck on a price", "the helper that forgets"].
+Answer their 4 questions in one line each: right person on each task? Runs end to end, with links? Nothing made up? Would they use it Monday?
+One sentence pitch plus 4 lines. No AI jargon, and no claim I can't click to prove.
+```
+
+## 3. CHECK-IN PUSH (T-20 before [4:30 / 6:00 / 7:30])
+```
+Check-in in 20 minutes. They'll restart the AI fresh in front of everyone. Stop all new features.
+Rehearse it now: kill every agent process, start fresh with the single command, and watch it resume [CURRENT LOOP] without asking anything.
+Run that 3 times. Fix only what breaks: state that isn't persisted, a prompt that asks a question, work done twice.
+Give me the one start command and the links (Linear / Slack / email) that prove it carried on. Commit when green.
 ```
 
 ## 4. PARALLEL SPLIT
 ```
-Next increment: [INCREMENT].
-Split it into 2 independent tasks, one per git worktree ([BRANCH-A], [BRANCH-B]).
-For each task, list the exact files it creates or edits. No file may appear in both lists;
-if a shared file has to change, give it to one task and define the interface the other relies on.
-Also start subagents to research these docs in parallel: [API / SDK / DOCS].
-Each worktree: copy .env in, run its own npm install, and use its own port ([PORT-A], [PORT-B]).
+Next increment: [INCREMENT, e.g. "calendar invites + WhatsApp to Singapore"].
+Run /parallel. The shared contract is the handover ledger / task schema: [FILE]. Commit it on master first.
+One builder per tool integration ([TOOL-A], [TOOL-B]); each owns only its own file.
+Run a researcher on any API we haven't used yet ([API]) and paste only its snippet into the builder prompt.
 ```
 
-## 5. MERGE (T-15 min)
+## 5. MERGE (T-15 before a check-in or 8:30)
 ```
-Merge [BRANCH-A] and [BRANCH-B] into main. Resolve any conflicts, keeping both features working.
-Then run the trigger command: [COMMAND].
-Confirm it works end to end: show the console output and tell me what I should see on [PHONE / INBOX].
-If something is broken, revert that branch's merge rather than debugging past T-5.
+Merge every passing branch into master, one at a time, and run the verifier after each.
+Then run the end-to-end flow from a fresh start: [START COMMAND].
+Show me the proof links it produced (Linear issues + owners, Slack message, email, calendar event).
+If anything breaks after T-5, revert that merge rather than debug.
 ```
 
 ## 6. DEBUG
@@ -63,25 +58,31 @@ with a single command. Run those checks, tell me which cause it is, then fix tha
 ## 7. RESCUE
 ```
 I've spent 20+ minutes on [PROBLEM] without progress.
-Stop. Propose the simplest fallback that still does something real, live: for example a video file
-instead of the webcam, Telegram instead of SMS, Claude vision instead of Qwen, a hardcoded rule instead of a parsed SOP.
-It must still end in something visible on [PHONE / INBOX].
-Give me one option, implement it, run it, and show the output. Leave the broken path in place but unused.
+Propose the simplest fallback that still does real work in the real tools. For example: the Granola API -> the sample call notes file, WhatsApp -> Slack, a calendar API -> an emailed .ics invite, a team of AIs -> one lead AI with role prompts.
+Never fake the output: a fallback must be labelled as one in the demo.
+Pick one, build it, run it, show the proof link, and commit. Leave the broken path in place but unused.
 ```
 
-## 8. DEMO HARDENING
+## 8. HANDS-OFF HARDENING (before 8:30)
 ```
-Harden [SCRIPT, e.g. vision/live.js] for a live demo:
-- retry each API call up to 2 times with a short backoff, and print the raw error if it still fails
-- keep a per-rule cooldown of [N] seconds
-- one clear console line per event: time, verdict, rule, confidence, alert sent or not
-- a manual trigger key: pressing [KEY] fires the alert with the current frame, in case the VLM misses on stage
-Run it, press the key once, and show the output.
+At 8:30 it runs for 3 minutes with nobody touching the keyboard. Harden [START COMMAND] for that:
+- it starts on its own trigger ([NEW GRANOLA NOTE / FILE DROP / SCHEDULE]), not on a keypress
+- retry each API call twice, and log the raw error if it still fails
+- idempotent: it never creates the same Linear issue or email twice after a restart (the "helper that forgets")
+- every message to a person says it's from an AI
+- one clear console line per handoff: who, what, the proof link
+Run it end to end once, untouched, and show the log.
 ```
 
-## 9. CLAUDE.md UPDATE
+## 9. HONESTY AUDIT
 ```
-You just made this mistake: [WHAT WENT WRONG].
-Add one short rule to CLAUDE.md that prevents it next time. Be specific to this repo, not generic advice.
-Keep CLAUDE.md under 30 lines; if it's full, replace the least useful line. Show the diff, then commit.
+Audit the last run for "nothing made up." For every task, message, email and calendar event the AI produced:
+name the exact source line it came from (call notes, inbox, Slack, Linear), or flag it as invented.
+Fix every invented item: either cite a source or drop it. Check that every outbound message identifies itself as AI.
+Show the audit table, then commit.
+```
+
+## 10. CLAUDE.md UPDATE
+```
+You just made this mistake: [WHAT WENT WRONG]. Run /learn with it.
 ```
