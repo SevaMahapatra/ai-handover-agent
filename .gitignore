@@ -6,3 +6,4 @@ kit/out/
 .vercel/
 .env.local
 .env.*.local
+state/
