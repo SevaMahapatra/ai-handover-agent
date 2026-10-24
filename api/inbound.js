@@ -2,9 +2,7 @@
 // Twilio SMS (form: From, Body)  -> TwiML reply text back to the sender's phone.
 // Twilio voice (form: CallSid)   -> TwiML <Say>.
 // Vapi / Retell / anything JSON  -> logged, {ok:true}.
-import fs from "node:fs";
-
-const LOG = "kit/out/inbound.json";
+import { logKitEvent } from "../kit/events.js";
 
 async function readBody(req) {
   if (req.body !== undefined) return typeof req.body === "string" ? parse(req.body, req) : req.body; // Vercel pre-parses
@@ -21,14 +19,9 @@ const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;
 export default async function handler(req, res) {
   const body = await readBody(req);
   const kind = body.Body !== undefined ? "sms" : body.CallSid ? "call" : body.message?.type ?? body.event ?? "json";
-  const event = { ts: new Date().toISOString(), kind, from: body.From ?? body.call?.customer?.number ?? null, text: body.Body ?? null, body };
-  console.log(`[inbound] ${event.ts} ${kind} from=${event.from ?? "-"} ${event.text ?? ""}`);
-  try {
-    fs.mkdirSync("kit/out", { recursive: true });
-    const all = fs.existsSync(LOG) ? JSON.parse(fs.readFileSync(LOG, "utf8")) : [];
-    all.push(event);
-    fs.writeFileSync(LOG, JSON.stringify(all, null, 2));
-  } catch {} // read-only FS on Vercel; console log is enough there
+  const from = body.From ?? body.call?.customer?.number ?? null;
+  console.log(`[inbound] ${kind} from=${from ?? "-"} ${body.Body ?? ""}`);
+  logKitEvent(`${kind === "sms" || kind === "call" ? kind : "voiceagent"}.received`, `${kind} from ${from ?? "unknown"}${body.Body ? `: ${body.Body}` : ""}`, body);
 
   if (kind === "sms") {
     res.setHeader("content-type", "text/xml");
