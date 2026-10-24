@@ -14,6 +14,7 @@ import { askJSON } from "../vision/claude.js";
 import { PERSONAS } from "./personas.js";
 import { loadSources } from "./sources.js";
 import { shiftChanges, local } from "./shift.js";
+import { postDecisionQueue, FOUNDER } from "./queue.js";
 import { doWork, linearIssue, say, pool, link, honesty, citedText, workMarker } from "./work.js";
 
 const MAX_WORK_PER_PERSON = 6; // per cycle, keeps a demo cycle fast
@@ -122,8 +123,10 @@ export async function runCycle({ reason = "manual", now = new Date() } = {}) {
   }
 
   // 5. NEEDS HUMAN: ask the owner (only while they're on shift), once per obligation.
-  for (const o of open.filter((o) => o.needs_human && onShift(o.owner)))
+  //    The founder's decisions go to ONE queue instead (handover/queue.js), not one ask per item.
+  for (const o of open.filter((o) => o.needs_human && onShift(o.owner) && o.owner !== FOUNDER))
     slack(`ask ${o.key}`, await say(o.owner, `${first(o.owner)} (human), only you can decide: ${o.needs_human} Context: ${link(issueOf[o.key])}`, `[ask:${o.key}]`, note(o.owner)));
+  out.posted.push(...(await postDecisionQueue({ ledger, issueOf, info, now, simulated, onShift })));
 
   shifts.save();
   return { reason, now: now.toISOString(), changes: r.changes ?? [], issues, transitions: shifts.transitions, first: shifts.first, simulated, ...out };
