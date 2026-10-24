@@ -61,6 +61,46 @@ export async function dispatch() {
   return ledger;
 }
 
+const Delta = z.object({
+  upsert: z.array(Obligation), // changed or new obligations only (same key = replace)
+  conflicts_add: Ledger.shape.conflicts,
+  linear_fixes_add: Ledger.shape.linear_fixes,
+  changes: z.array(z.object({ key: z.string(), what_changed: z.string(), sources: z.array(z.string()) })), // one line per change, for the Slack reply
+});
+
+// Fast path for drops: only sources not yet in the ledger are sent as NEW; the model returns just the changes.
+export async function update() {
+  if (!fs.existsSync(LEDGER)) return { full: await dispatch() };
+  const prev = JSON.parse(fs.readFileSync(LEDGER, "utf8"));
+  const sources = loadSources();
+  const seen = new Set(prev.source_refs ?? []);
+  const fresh = sources.filter((s) => !seen.has(s.ref));
+  if (!fresh.length) return { ledger: prev, changes: [] };
+  const fmt = (s) => `[${s.ref}] ${s.kind} | ${s.at ?? "-"} | ${s.from}\n${s.text}`;
+  const text = [
+    `Now: ${new Date().toISOString()}.`,
+    `Team:\n${JSON.stringify(TEAM)}`,
+    `Current ledger:\n${JSON.stringify({ obligations: prev.obligations, conflicts: prev.conflicts })}`,
+    `Older sources (for citation only):\n${sources.filter((s) => seen.has(s.ref)).map(fmt).join("\n\n")}`,
+    `NEW sources since the last run (these may change earlier facts):\n${fresh.map(fmt).join("\n\n")}`,
+    "Return ONLY obligations that the new sources change or create (keep existing keys), and new conflicts or fixes. Cite the new refs.",
+  ].join("\n\n");
+  const delta = await askJSON({ system: SYSTEM, schema: Delta, effort: "low", max_tokens: 8000, content: [{ type: "text", text }] });
+  const ledger = { ...prev, obligations: [...prev.obligations] };
+  for (const o of delta.upsert) {
+    const i = ledger.obligations.findIndex((x) => x.key === o.key);
+    if (i >= 0) ledger.obligations[i] = o;
+    else ledger.obligations.push(o);
+  }
+  ledger.conflicts = [...prev.conflicts, ...delta.conflicts_add];
+  ledger.linear_fixes = [...prev.linear_fixes, ...delta.linear_fixes_add];
+  ledger.honesty_flags = audit(ledger, sources);
+  ledger.updated_at = new Date().toISOString();
+  ledger.source_refs = sources.map((s) => s.ref);
+  fs.writeFileSync(LEDGER, JSON.stringify(ledger, null, 2));
+  return { ledger, changes: delta.changes, fresh: fresh.map((s) => s.ref) };
+}
+
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // Checks every claim the model made against the cited source text.
@@ -93,7 +133,18 @@ export function audit(ledger, sources) {
   return flags;
 }
 
-if (import.meta.filename === process.argv[1]) {
+if (import.meta.filename === process.argv[1] && process.argv[2] === "--update") {
+  const t0 = Date.now();
+  const r = await update();
+  if (r.full) console.log("no ledger yet: ran a full dispatch");
+  else {
+    console.log(`new sources: ${r.fresh?.join(", ") || "none"}`);
+    for (const c of r.changes) console.log(`- ${c.key}: ${c.what_changed} [${c.sources}]`);
+    console.log(`honesty flags: ${r.ledger.honesty_flags.length}${r.ledger.honesty_flags.map((f) => `
+  ! ${f}`).join("")}`);
+  }
+  console.log(`done in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+} else if (import.meta.filename === process.argv[1]) {
   const t0 = Date.now();
   const l = await dispatch();
   for (const p of TEAM) {

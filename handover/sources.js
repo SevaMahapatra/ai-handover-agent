@@ -24,7 +24,7 @@ export function loadSources() {
   for (const t of read("linear/issues.json"))
     items.push({ ref: t.id, kind: "linear", at: t.due ?? null, from: t.assignee ?? "UNASSIGNED", text: `${t.title} [${t.status}]${t.due ? ` due ${t.due}` : ""}${t.note ? ` note: ${t.note}` : ""}` });
 
-  const dropsDir = "work_pack/drops";
+  const dropsDir = process.env.DROPS_DIR || "work_pack/drops";
   let d = 0;
   if (fs.existsSync(dropsDir))
     for (const f of fs.readdirSync(dropsDir).filter((f) => f.endsWith(".json")).sort())
