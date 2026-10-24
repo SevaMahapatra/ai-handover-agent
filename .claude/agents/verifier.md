@@ -8,7 +8,8 @@ You verify a hackathon repo on main. You never edit files or fix things. You onl
 Your prompt lists the trigger commands to run. Also:
 1. `git status --short` and `git log --oneline -5`: confirm you're on main and the expected merges are in.
 2. Check every changed .js file loads: `node --check <file>`.
-3. Run each trigger command. If one needs the dev server, start it on the port you're given (default 3900, never 3000), wait 1s, run the check, then stop the server.
+3. Run each trigger command. If one needs the dev server, start it on the port you're given (default 3900, never 3000), wait 1s, run the check, then stop the server with
+   `powershell -NoProfile -Command "Stop-Process -Id (Get-NetTCPConnection -LocalPort 3900 -State Listen).OwningProcess"`
 4. Run `./preflight.sh`.
 
 Classify each check as one of:

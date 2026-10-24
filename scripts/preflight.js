@@ -1,14 +1,16 @@
 // Preflight: every key and service checked in parallel, then a PASS/FAIL/SKIP table. Run via ./preflight.sh
 // Required checks FAIL when unconfigured; optional ones SKIP until their keys are in .env.
 import "dotenv/config";
+import { isPlaceholder } from "../kit/env.js";
 import fs from "node:fs";
 import { exec } from "node:child_process";
 
 const TIMEOUT_MS = 45_000;
-const env = process.env;
+// Placeholder values (copied from .env.example) count as unset.
+const env = Object.fromEntries(Object.entries(process.env).filter(([, v]) => !isPlaceholder(v)));
 class Skip extends Error {}
 const skip = (msg) => { throw new Skip(msg); };
-const need = (...keys) => { const miss = keys.filter((k) => !env[k]); if (miss.length) throw new Error(`missing in .env: ${miss.join(", ")}`); };
+const need = (...keys) => { const miss = keys.filter((k) => !env[k]); if (miss.length) throw new Error(`missing or placeholder in .env: ${miss.join(", ")}`); };
 
 const run = (cmd) =>
   new Promise((res, rej) =>

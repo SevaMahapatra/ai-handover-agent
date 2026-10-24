@@ -1,7 +1,7 @@
 // CONTRACT: requireEnv("A", "B") returns {A, B} or throws a clear error naming missing / placeholder keys.
 import "dotenv/config";
 
-const isPlaceholder = (v) => !v || v.includes("...") || v.includes("example.com") || v.startsWith("+1555") || /^1234567/.test(v);
+export const isPlaceholder = (v) => !v || v.includes("...") || v.includes("example.com") || v.startsWith("+1555") || /^1234567/.test(v);
 
 export function requireEnv(...keys) {
   const bad = keys.filter((k) => isPlaceholder(process.env[k]));
