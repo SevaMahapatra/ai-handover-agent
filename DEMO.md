@@ -2,10 +2,10 @@
 Schedule: 3:00 doors · **4:30 / 6:00 / 7:30** check-ins (they restart the AI fresh: carries on = bell, stuck or asks = drink) · **8:30 hands off** (3 min, live, nobody touches the keyboard) · winner at 9.
 
 Fill these in once they exist:
-- **Start command:** `[START]` (one command; it resumes from saved state)
-- **Trigger:** `[TRIGGER]` (a new call note in Granola, or the sample notes file)
-- **Shift change:** `[SHIFT]` (how Austin's AI hands over to Singapore's)
-- **Proof links:** Linear board `[URL]` · Slack channel `[URL]` · inbox `[URL]` · calendar `[URL]` · `/status` `[URL]`
+- **Start command:** `node handover/listen.js` (resumes from state/ + Linear + Slack; reruns create nothing twice)
+- **Trigger:** paste the hosts' drop into Slack `#drops` (a phone works, so no keyboard). The Lead AI replies in the thread with what changed.
+- **Shift change:** real clock, 08:00–20:00 local per person. 7:00pm Austin = Wei Lin + Priya ON (pick up); 8:00pm Austin = Sam + Dana OFF (handover notes). Rehearse with `node handover/run.js --now <ISO>` (labelled simulated).
+- **Proof links:** Linear https://linear.app/sevamahapatra/team/ZAP · Slack #handover https://sevas-team.slack.com/archives/C0CBQQYD3PD · #drops https://sevas-team.slack.com/archives/C0CBQQXRM99 · Gmail (invites from "<Name>'s AI")
 
 ## Before every check-in (T-10 min)
 1. `./preflight.sh`: everything you'll use must be PASS.

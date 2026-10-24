@@ -21,7 +21,8 @@
 | Linear sync, ZAP team only, idempotent | kit/linear.js | `node kit/linear.js` (2nd run: 0 created) |
 | Slack `postAs` / `ensureChannels` / `findMessage` | kit/slack.js | `node kit/slack.js` (#handover, #drops) |
 | `sendEmail` (always to GMAIL_USER) + `.ics` invite | kit/email.js, kit/ics.js | `node kit/email.js` |
-| Not built yet: shift-change worker, Socket Mode listener | | |
+| Shift-change worker `runCycle()` (handover notes, AI work, drafts, asks) | handover/run.js, shift.js, work.js | `node handover/run.js [--now <ISO>]` (2nd run: 0 new) |
+| **Start command**: Slack Socket Mode listener (#drops, @mentions, ✅/❌ drafts, 5-min cycles) | handover/listen.js | `node handover/listen.js` |
 
 ## Rules
 - Do the simplest thing that works live. No auth, tests, or DB unless asked.
