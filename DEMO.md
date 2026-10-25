@@ -25,8 +25,7 @@ If it stalls, say so. Honesty is judged.
 ## 8:30 prep (8:10–8:25)
 1. `./preflight.sh`: all PASS. `node scripts/linear-audit.js`: "0 open issue(s) missing something".
 2. The supervisor is running (`tail -3 state/listen.log` shows a `cycle:` line from the last 5 minutes). Then keyboard down.
-3. **Workflow monitor:** run `node server.js` in a second terminal, then open **http://localhost:3000/api/flow** full-screen (F11) as tab 0. **Live** mode lights each step as it fires; **Step** mode = click Next ▶ (or →) to walk the judges through, with "Open proof ↗" per step.
-   **Laptop tabs, in this order** (you click with the mouse, no typing):
+3. **Laptop tabs, in this order** (you click with the mouse, no typing):
    1. `work_pack/work_pack/calls/C01.md`, the Granola stand-in (Northwind call)
    2. Linear ZAP board, **grouped by label** (Sam / Wei Lin / Dana / Priya)
    3. Linear: the Northwind price issue (`[ZAP-102] Northwind price`)

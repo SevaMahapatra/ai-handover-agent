@@ -1,4 +1,4 @@
-// CONTRACT: kit event log, shared by every kit action and the /status page.
+// CONTRACT: kit event log, shared by every kit action.
 // Event shape: { ts: ISO string, type: "<service>.<verb>" (e.g. "linear.commented", "slack.posted", "email.sent"), summary: one line, data: object }
 import fs from "node:fs";
 

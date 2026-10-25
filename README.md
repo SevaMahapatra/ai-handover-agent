@@ -44,7 +44,6 @@ npm install
 cp .env.example .env           # Anthropic, Linear, Slack (bot + Socket Mode), Gmail app password
 ./preflight.sh                 # every service should be PASS
 npm start                      # supervisor: keeps the PC awake, restarts on crash, one instance only
-npm run monitor                # live workflow monitor at http://localhost:3000/
 ```
 Create the Slack app from `kit/slack-manifest.yaml`. Other commands: `npm run cycle` (one cycle by hand),
 `npm run audit` (every open task has owner + due + handover note), `npm run reset -- --yes` (clean slate).
@@ -58,7 +57,6 @@ Create the Slack app from `kit/slack-manifest.yaml`. Other commands: `npm run cy
 | `handover/cards.js` · `queue.js` · `shift.js` · `work.js` | Live cards · Sam's decision queue · shift clock · each AI's work |
 | `handover/scenarios/` | Plug-ins for the efficiency-doc scenarios (install, double booking, proposal, onboarding, reimbursement, case study, runbook) |
 | `kit/` | Thin clients: Linear, Slack, Gmail, `.ics`, calendar slot finder, Claude |
-| `api/flow.js` | The live workflow monitor (read-only) |
 | `scripts/` | Supervisor, preflight, Linear audit, reset |
 | `DEMO.md` · `DEPLOY.md` | Demo runbook · running it on a server (Dockerfile, untested) |
 

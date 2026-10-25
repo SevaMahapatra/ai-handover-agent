@@ -6,7 +6,6 @@
   "private": true,
   "scripts": {
     "start": "node scripts/supervise.js",
-    "monitor": "node server.js",
     "cycle": "node handover/run.js",
     "preflight": "node scripts/preflight.js",
     "audit": "node scripts/linear-audit.js",
