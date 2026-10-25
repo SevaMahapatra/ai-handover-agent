@@ -31,6 +31,16 @@ export default function handler(req, res) {
   }
   const out = events.map((e) => ({ ...e, step: stepOf(e.type, e.text) })).filter((e) => e.step)
     .sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 60);
+  // Live links for the scenario cues: latest known URL per Linear issue (from the action log), Slack cards and queue items.
+  const issues = {};
+  for (const e of read("kit/out/events.json", [])) {
+    const m = e.summary?.match(/(ZAP-\d+) (.+)$/);
+    if (m && e.data?.url?.includes("linear.app")) issues[m[2].replace(/^\[AI\] /, "")] = e.data.url;
+  }
+  const slackLink = (ts) => `https://sevas-team.slack.com/archives/C0CBQQYD3PD/p${String(ts).replace(".", "")}`;
+  const cards = Object.entries(read("state/cards.json", {})).map(([k, v]) => ({ person: k.split("|")[0], link: slackLink(v.ts) }));
+  const queueItems = Object.values(read("state/queue.json", {})).map((q) => ({ title: q.title, kind: q.kind, status: q.status, link: q.permalink }));
+  const dropsToday = events.filter((e) => e.type === "drop").length;
   const shifts = read("state/shifts.json", {});
   const queue = Object.values(read("state/queue.json", {}));
   const drafts = read("state/drafts.json", []);
@@ -41,6 +51,11 @@ export default function handler(req, res) {
     now: new Date().toISOString(),
     events: out,
     shifts,
+    issues,
+    cards,
+    queueItems,
+    dropsToday,
+    drafts: drafts.map((d) => ({ id: d.id, status: d.status, subject: d.payload?.subject ?? "", link: d.slack?.permalink ?? "" })),
     counts: {
       obligations: ledger.obligations.length,
       sources: (ledger.source_refs ?? []).length,
