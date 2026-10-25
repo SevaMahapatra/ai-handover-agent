@@ -64,7 +64,8 @@ function pickItems(ledger) {
 }
 
 export async function postDecisionQueue({ ledger, issueOf, info, now = new Date(), simulated = false, onShift }) {
-  if (!onShift(FOUNDER)) return [];
+  // The queue is posted even while Sam is off shift: decisions wait for him there, nobody is pinged at night.
+  void onShift;
   const items = pickItems(ledger).filter((i) => issueOf[i.o.key]);
   if (!items.length) return [];
   const p = PERSONAS[FOUNDER], when = local(now, p.tz), out = [];
