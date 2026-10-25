@@ -5,12 +5,11 @@ import fs from "node:fs";
 import { requireEnv, cli } from "./env.js";
 import { logKitEvent } from "./events.js";
 import { PERSONAS, LINEAR_TEAM_KEY } from "../handover/personas.js";
+import { loadSources } from "../handover/sources.js";
 
 const PACK_ISSUES = "work_pack/work_pack/linear/issues.json";
 const UNOWNED = "Unowned";
 const AI = "AI-handover";
-const START = "<!-- ledger:start -->";
-const END = "<!-- ledger:end -->";
 const ISSUE = `id identifier title url description dueDate state { name } labels { nodes { id name } }`;
 
 async function gql(query, variables = {}) {
@@ -67,10 +66,12 @@ export async function seedPack() {
   for (const p of JSON.parse(fs.readFileSync(PACK_ISSUES, "utf8"))) {
     let issue = existing.find((i) => i.title.startsWith(`[${p.id}] `));
     const created = !issue;
+    // Older boards carried a "Source: work pack…" footer; issues not on the ledger (e.g. closed duplicates) keep just the note.
+    if (issue?.description?.includes("Source: work pack linear/issues.json")) issue = await updateIssue(issue.id, { description: p.note ?? "" });
     if (!issue) {
       issue = await createIssue({
         title: `[${p.id}] ${p.title}`,
-        description: `${p.note ?? ""}\n\nSource: work pack linear/issues.json (${p.id})`,
+        description: p.note ?? "",
         dueDate: p.due ?? undefined,
         stateId: await stateId(p.status),
         labelIds: [labels[p.assignee ? PERSONAS[p.assignee].label : UNOWNED]],
@@ -82,16 +83,36 @@ export async function seedPack() {
   return out;
 }
 
-const block = (o, due) => [START, `**Owed to:** ${o.owed_to}`, `**Due:** ${o.due ? `${o.due} (from the sources)` : `${due} (AI target: no deadline in the sources)`}`,
-  `**Why:** ${o.why}`, `**Next step:** ${o.next_step}`,
-  `**AI can do:** ${o.ai_can_do ?? "-"}`, `**Needs human:** ${o.needs_human ?? "-"}`, `**Sources:** ${o.sources.join(", ")}`, `ledger-key: ${o.key}`, END].join("\n\n");
-
-function withBlock(desc, o, due) {
-  desc = desc ?? "";
-  const a = desc.indexOf(START), b = desc.indexOf(END);
-  const rest = a >= 0 && b > a ? desc.slice(0, a) + desc.slice(b + END.length) : desc;
-  return `${rest.trim()}\n\n${block(o, due)}`.trim();
+// Readable provenance: "Granola call: Northwind… (20 Oct, C01)" instead of bare refs. The ref stays for tracing.
+const DMON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+let byRefCache;
+function sourceLabel(ref) {
+  byRefCache ??= Object.fromEntries(loadSources().map((s) => [s.ref, s]));
+  const s = byRefCache[ref];
+  if (!s || s.kind === "linear") return null; // the issue itself
+  const d = s.at && !isNaN(new Date(s.at)) ? `${new Date(s.at).getUTCDate()} ${DMON[new Date(s.at).getUTCMonth()]}, ` : "";
+  const what = s.kind === "call" ? `Granola call: ${s.text.split("\n")[0]}`
+    // "ken.ong" -> "Ken Ong": Linear auto-links ".ong"/".kim" as domains, which made every sync rewrite the description.
+    : s.kind.startsWith("email") ? `Email ${s.kind === "email-sent" ? "sent by" : "from"} ${s.from.split("@")[0].split(/[._]/).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}`
+    : s.kind === "slack" ? `Slack ${s.from.split(" in ")[1] ?? ""} (${s.from.split(" in ")[0]})`
+    : s.kind === "whatsapp" ? `WhatsApp: ${s.from.split(" -> ")[0]}`
+    : s.kind === "calendar" ? `Calendar: ${s.text.split(" 20")[0]}` : "New message";
+  return `${what} (${d}${ref})`;
 }
+
+// The whole description is ours: the pack's original note (if any), then the handover context. No hidden markers.
+function describe(o, due, packNote) {
+  const based = o.sources.map(sourceLabel).filter(Boolean);
+  return [packNote, `**Owed to:** ${o.owed_to}`, `**Due:** ${o.due ? o.due : `${due} (AI target: no deadline in the sources)`}`,
+    `**Why:** ${o.why}`, `**Next step:** ${o.next_step}`, o.needs_human && `**Needs a human:** ${o.needs_human}`,
+    based.length && `**Based on:** ${based.join(" · ")}`].filter(Boolean).join("\n\n");
+}
+
+// [AI] issues have no pack id, so remember which issue holds which obligation. Fallbacks for older boards:
+// the old "ledger-key:" line, then the exact title.
+const MAP = "state/linear-map.json";
+const loadMap = () => (fs.existsSync(MAP) ? JSON.parse(fs.readFileSync(MAP, "utf8")) : {});
+const saveMap = (m) => (fs.mkdirSync("state", { recursive: true }), fs.writeFileSync(MAP, JSON.stringify(m, null, 2)));
 
 // No deadline in the sources -> a target 2 working days out, labelled "AI target" on the issue.
 // Set once and then kept (existing dueDate wins), so it doesn't drift every day.
@@ -109,10 +130,12 @@ export async function applyLedger(ledger) {
   const seeded = Object.fromEntries((await seedPack()).map((s) => [s.packId, s]));
   const issues = await teamIssues();
   const ownerIds = new Set([...Object.values(PERSONAS).filter((p) => p.label).map((p) => labels[p.label]), labels[UNOWNED]]);
-  const out = [];
+  const out = [], map = loadMap();
+  const notes = Object.fromEntries(JSON.parse(fs.readFileSync(PACK_ISSUES, "utf8")).map((p) => [p.id, p.note ?? ""]));
   for (const o of ledger.obligations) {
     const primary = seeded[o.linear_ids[0]];
-    let cur = primary ? issues.find((i) => i.id === primary.id) : issues.find((i) => i.title.startsWith("[AI] ") && i.description?.includes(`ledger-key: ${o.key}`));
+    let cur = primary ? issues.find((i) => i.id === primary.id)
+      : issues.find((i) => i.id === map[o.key]) ?? issues.find((i) => i.title.startsWith("[AI] ") && (i.description?.includes(`ledger-key: ${o.key}`) || i.title === `[AI] ${o.title}`));
     const curState = cur?.state.name;
     // Closing sticks: an issue a person or an AI moved to Done/Canceled is never reopened by a later sync.
     const state = ["Done", "Canceled"].includes(curState) ? curState
@@ -121,7 +144,7 @@ export async function applyLedger(ledger) {
     const due = o.due ?? cur?.dueDate ?? aiTarget();
     const want = {
       labelIds: [...keep, labels[PERSONAS[o.owner].label], labels[AI]],
-      description: withBlock(cur?.description, o, due),
+      description: describe(o, due, primary ? notes[o.linear_ids[0]] : ""),
       stateId: await stateId(state),
       dueDate: due,
     };
@@ -132,13 +155,19 @@ export async function applyLedger(ledger) {
     } else {
       const same = curState === state && cur.dueDate === due && (cur.description ?? "").trim() === want.description &&
         [...want.labelIds].sort().join() === cur.labels.nodes.map((l) => l.id).sort().join();
+      if (!same && process.env.LINEAR_DEBUG) {
+        const a = (cur.description ?? "").trim(), b = want.description, i = [...a].findIndex((c, k) => c !== b[k]);
+        console.log(`[debug] ${cur.identifier} state ${curState}->${state} due ${cur.dueDate}->${due} labels ${[...want.labelIds].sort().join() === cur.labels.nodes.map((l) => l.id).sort().join()} desc@${i}: ${JSON.stringify(a.slice(i - 20, i + 40))} vs ${JSON.stringify(b.slice(i - 20, i + 40))}`);
+      }
       if (!same) (cur = await updateIssue(cur.id, want)), (action = "updated");
     }
     for (const extra of o.linear_ids.slice(1).filter((id) => seeded[id]))
       await comment(seeded[extra].id, `${PERSONAS[o.owner].aiName}: this is covered by ${cur.identifier} (${cur.url}).\n\nmarker: link:${o.key}`);
     if (action !== "unchanged") logKitEvent(`linear.${action}`, `${action} ${cur.identifier} ${cur.title}`, { key: o.key, url: cur.url });
+    if (!primary) map[o.key] = cur.id;
     out.push({ key: o.key, identifier: cur.identifier, url: cur.url, action });
   }
+  saveMap(map);
   for (const f of ledger.linear_fixes ?? []) {
     if (!seeded[f.linear_id]) continue;
     await comment(seeded[f.linear_id].id, `AI-handover fix: ${f.fix}\n\nSources: ${f.sources.join(", ")}\n\nmarker: fix:${f.linear_id}`);
