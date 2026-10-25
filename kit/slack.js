@@ -61,23 +61,37 @@ const permalink = async (channel, ts) => (await api("chat.getPermalink", { chann
 export const TAG = /[ \t]*\[[a-z][a-z0-9-]*:[^\]\s]*\]/g;
 export const hasMarker = (m, marker) => !!(m.text?.includes(marker) || m.metadata?.event_payload?.markers?.includes(marker));
 
-export async function postAs(personId, channel, text, { thread_ts } = {}) {
+const split = (text) => ({
+  tags: (text.match(TAG) ?? []).map((t) => t.trim()),
+  clean: text.replace(TAG, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim(),
+});
+const meta = (tags) => (tags.length ? { metadata: { event_type: "handover_ai", event_payload: { markers: tags.join(" ") } } } : {});
+
+// blocks: optional Block Kit layout (then `text` is the notification fallback, and the blocks must carry the AI label).
+export async function postAs(personId, channel, text, { thread_ts, blocks } = {}) {
   const p = persona(personId);
   channel = await resolve(channel);
-  const tags = (text.match(TAG) ?? []).map((t) => t.trim());
-  const clean = text.replace(TAG, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  const { tags, clean } = split(text);
   const r = await api("chat.postMessage", {
     channel,
     username: p.aiName,
     icon_emoji: p.icon,
     text: `${clean}\n_${p.signature}_`,
     unfurl_links: false,
+    ...(blocks ? { blocks } : {}),
     ...(thread_ts ? { thread_ts } : {}),
-    ...(tags.length ? { metadata: { event_type: "handover_ai", event_payload: { markers: tags.join(" ") } } } : {}),
+    ...meta(tags),
   });
   const link = await permalink(channel, r.ts);
   logKitEvent("slack.posted", `${p.aiName} in ${channel}: ${text.slice(0, 60)}`, { channel, ts: r.ts, permalink: link });
   return { channel, ts: r.ts, permalink: link };
+}
+
+// Edit a message in place (live handover cards). Tags in `text` go to metadata again, so lookups keep finding it.
+export async function updateMessage(personId, channel, ts, text, blocks) {
+  const p = persona(personId);
+  const { tags, clean } = split(text);
+  await api("chat.update", { channel, ts, text: `${clean}\n_${p.signature}_`, ...(blocks ? { blocks } : {}), ...meta(tags) });
 }
 
 export async function findMessage(channel, marker, { thread_ts } = {}) {

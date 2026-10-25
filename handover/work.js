@@ -10,6 +10,7 @@ import { makeIcs } from "../kit/ics.js";
 import { freeSlots } from "../kit/slots.js";
 import { addDraft, getDraft, setSlack } from "./drafts.js";
 import { PERSONAS, CHANNELS, LINEAR_TEAM_KEY } from "./personas.js";
+import { currentCard } from "./cards.js";
 import { team } from "./sources.js";
 
 export const hash = (s) => crypto.createHash("sha1").update(s).digest("hex").slice(0, 8);
@@ -23,7 +24,7 @@ export async function pool(items, n, fn) {
 // Read-only: an issue's id and comments (kit/linear.js doesn't export a reader).
 export async function linearIssue(identifier) {
   const { LINEAR_API_KEY } = requireEnv("LINEAR_API_KEY");
-  const q = `query($id: String!) { issue(id: $id) { id identifier url team { key } comments(first: 250) { nodes { body url createdAt } } } }`;
+  const q = `query($id: String!) { issue(id: $id) { id identifier url team { key } state { name type } comments(first: 250) { nodes { body url createdAt } } } }`;
   const res = await fetch("https://api.linear.app/graphql", { method: "POST", headers: { authorization: LINEAR_API_KEY, "content-type": "application/json" }, body: JSON.stringify({ query: q, variables: { id: identifier } }) });
   const j = await res.json();
   if (j.errors?.length || !j.data?.issue) throw new Error(`linear: ${j.errors?.[0]?.message ?? `no issue ${identifier}`}`);
@@ -32,10 +33,14 @@ export async function linearIssue(identifier) {
 }
 
 // Slack, deduped by marker in the channel itself (survives a lost state/ folder).
-export async function say(personId, text, marker, note = "") {
-  const found = await findMessage(CHANNELS.handover, marker);
+// Posts into the person's handover card thread when today's card exists (handover/cards.js); top-level otherwise,
+// or when { top: true } (the founder's decision queue is its own top-level card, since Slack threads don't nest).
+export async function say(personId, text, marker, note = "", { top = false } = {}) {
+  const card = !top && currentCard(personId);
+  const thread_ts = card?.ts;
+  const found = (thread_ts && (await findMessage(CHANNELS.handover, marker, { thread_ts }))) || (await findMessage(CHANNELS.handover, marker));
   if (found) return { ...found, existed: true };
-  return { ...(await postAs(personId, CHANNELS.handover, `${text}${note}\n${marker}`)), existed: false };
+  return { ...(await postAs(personId, CHANNELS.handover, `${text}${note}\n${marker}`, { thread_ts })), existed: false };
 }
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

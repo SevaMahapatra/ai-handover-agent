@@ -16,6 +16,7 @@ import { loadSources } from "./sources.js";
 import { shiftChanges, local } from "./shift.js";
 import { postDecisionQueue, FOUNDER } from "./queue.js";
 import { runScenarios } from "./scenarios/index.js";
+import { setCycle, ensureCards, refreshCards } from "./cards.js";
 import { doWork, linearIssue, say, pool, link, honesty, citedText, workMarker } from "./work.js";
 
 const MAX_WORK_PER_PERSON = 6; // per cycle, keeps a demo cycle fast
@@ -52,6 +53,13 @@ export async function runCycle({ reason = "manual", now } = {}) {
   await pool(open, 4, async (o) => (info[o.key] = await linearIssue(issueOf[o.key].identifier)));
   const out = { posted: [], drafts: [], handovers: [], comments: [], flags: [] };
   const slack = (what, s) => !s.existed && out.posted.push({ type: "slack", what, link: s.permalink });
+
+  // 0. HANDOVER CARDS: one card per person per shift (everyone on shift, plus anyone handing over right now).
+  //    Every say() below lands in that person's card thread. Cards are re-rendered and edited in place at the end.
+  setCycle({ now, mode });
+  const cardCtx = { ledger, issueOf, info, onShift, simulated };
+  const cardPeople = [...new Set([...Object.keys(shifts.state).filter(onShift), ...shifts.transitions.filter((t) => t.to === "off").map((t) => t.personId)])];
+  out.posted.push(...(await ensureCards(cardPeople, cardCtx)));
 
   // 1b. Every open issue carries a handover note from the moment it exists, not only after a shift change.
   const bare = open.filter((o) => !info[o.key].comments.some((c) => c.body.includes("**Handover from")));
@@ -134,6 +142,9 @@ export async function runCycle({ reason = "manual", now } = {}) {
 
   // 6. SCENARIOS: one plug-in per scenario in handover/scenarios/ (see index.js for the contract). Each is isolated.
   out.scenarios = await runScenarios({ ledger, open, issueOf, info, byRef, sources, now, simulated, mode, note, onShift, dry: false });
+
+  // 7. LIVE CARDS: re-render today's cards and edit them in place when anything changed.
+  out.scenarios.push(...(await refreshCards(cardCtx)));
 
   shifts.save();
   return { reason, now: now.toISOString(), changes: r.changes ?? [], issues, transitions: shifts.transitions, first: shifts.first, simulated, ...out };

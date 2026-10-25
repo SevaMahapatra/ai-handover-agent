@@ -70,7 +70,7 @@ export async function postDecisionQueue({ ledger, issueOf, info, now = new Date(
   const p = PERSONAS[FOUNDER], when = local(now, p.tz), out = [];
   const sim = simulated ? `\n_(simulated clock: ${when.label})_` : "";
   const header = await say(FOUNDER, `*Sam's decisions today: ${items.length} of max ${MAX_ITEMS}.* Each one is ready: tap ✅ to approve or ❌ to decline. For the ones asking for a value, reply in this thread starting with its number (e.g. \`1: <value>\`).`,
-    `[queue:${FOUNDER}:${when.date}${simulated ? ":sim" : ""}]`, sim);
+    `[queue:${FOUNDER}:${when.date}${simulated ? ":sim" : ""}]`, sim, { top: true });
   if (!header.existed) out.push({ type: "slack", what: `decision queue header (${items.length} items)`, link: header.permalink });
   const channel = header.channel ?? (await ensureChannels([CHANNELS.handover]))[CHANNELS.handover];
   const idx = load();
