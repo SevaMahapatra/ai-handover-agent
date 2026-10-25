@@ -55,16 +55,25 @@ export async function ensureChannels(names) {
 const resolve = async (channel) => (/^[CG][A-Z0-9]{6,}$/.test(channel) ? channel : (await ensureChannels([channel.replace(/^#/, "")]))[channel.replace(/^#/, "")]);
 const permalink = async (channel, ts) => (await api("chat.getPermalink", { channel, message_ts: ts })).permalink;
 
+// Dedupe tags like [draft:email:x] or [pickup:weilin:2026-10-25:live] never show in Slack: postAs moves them into
+// invisible message metadata, and findMessage/hasMarker read them from there. Only lowercase "word:" tags with no spaces
+// count, so "[ZAP-102]" and placeholders like "[PRICE: Sam to decide]" stay in the text.
+export const TAG = /[ \t]*\[[a-z][a-z0-9-]*:[^\]\s]*\]/g;
+export const hasMarker = (m, marker) => !!(m.text?.includes(marker) || m.metadata?.event_payload?.markers?.includes(marker));
+
 export async function postAs(personId, channel, text, { thread_ts } = {}) {
   const p = persona(personId);
   channel = await resolve(channel);
+  const tags = (text.match(TAG) ?? []).map((t) => t.trim());
+  const clean = text.replace(TAG, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
   const r = await api("chat.postMessage", {
     channel,
     username: p.aiName,
     icon_emoji: p.icon,
-    text: `${text}\n_${p.signature}_`,
+    text: `${clean}\n_${p.signature}_`,
     unfurl_links: false,
     ...(thread_ts ? { thread_ts } : {}),
+    ...(tags.length ? { metadata: { event_type: "handover_ai", event_payload: { markers: tags.join(" ") } } } : {}),
   });
   const link = await permalink(channel, r.ts);
   logKitEvent("slack.posted", `${p.aiName} in ${channel}: ${text.slice(0, 60)}`, { channel, ts: r.ts, permalink: link });
@@ -74,9 +83,9 @@ export async function postAs(personId, channel, text, { thread_ts } = {}) {
 export async function findMessage(channel, marker, { thread_ts } = {}) {
   channel = await resolve(channel);
   const j = thread_ts
-    ? await api("conversations.replies", { channel, ts: thread_ts, limit: 200 })
-    : await api("conversations.history", { channel, limit: 200 });
-  const m = j.messages.find((m) => m.text?.includes(marker));
+    ? await api("conversations.replies", { channel, ts: thread_ts, limit: 200, include_all_metadata: true })
+    : await api("conversations.history", { channel, limit: 200, include_all_metadata: true });
+  const m = j.messages.find((m) => hasMarker(m, marker));
   return m ? { ts: m.ts, permalink: await permalink(channel, m.ts) } : null;
 }
 

@@ -12,7 +12,7 @@
 // Slack threads are one level deep, so a reply "in an item's thread" lands in the header thread: "<n>: <value>" picks the item.
 import fs from "node:fs";
 import { requireEnv } from "../kit/env.js";
-import { postAs, ensureChannels } from "../kit/slack.js";
+import { postAs, ensureChannels, hasMarker } from "../kit/slack.js";
 import { comment } from "../kit/linear.js";
 import { listDrafts, getDraft } from "./drafts.js";
 import { PERSONAS, CHANNELS } from "./personas.js";
@@ -78,8 +78,8 @@ export async function postDecisionQueue({ ledger, issueOf, info, now = new Date(
   for (const [n0, { o, d, kind }] of items.entries()) {
     const n = n0 + 1, marker = `[qitem:${o.key}]`, issue = issueOf[o.key];
     if (idx[o.key]?.header_ts === header.ts) continue;
-    replies ??= (await slackApi("conversations.replies", { channel, ts: header.ts, limit: "200" })).messages;
-    const found = replies.find((m) => m.text?.includes(marker));
+    replies ??= (await slackApi("conversations.replies", { channel, ts: header.ts, limit: "200", include_all_metadata: "true" })).messages;
+    const found = replies.find((m) => hasMarker(m, marker));
     const value = o.needs_human?.match(VALUE)?.[1]?.toLowerCase();
     const ready = kind === "send" ? `draft "${d.payload.subject}" to ${d.payload.intendedTo.join(", ")}` : o.needs_human;
     const action = { approve: "✅ approve / ❌ decline", input: `Reply in this thread with \`${n}: <the ${value}>\`, and the drafts fill in from your reply`, send: `✅ sends the draft ${d?.id}` }[kind];
