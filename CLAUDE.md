@@ -33,7 +33,7 @@
 - Demo rule: every step leaves clickable proof in a real tool (a Linear issue, a Slack message, an email, a calendar event), traceable to a source line.
 - Restart-safe: all state lives in files or the tools themselves, never in a process's memory. Resuming must not redo work.
 - Never patch files with `node -e`/heredoc string replaces: a backslash-n escape becomes a real newline and breaks the file (hit 4x). Use the Edit tool.
-- Never hand-delete bot posts or comments: dedupe markers live in Slack AND Linear, so a half-deleted pair never reposts. Use scripts/reset.js.
+- Never hand-delete bot posts or comments: dedupe lives in Slack message text AND state/comment-index.json (Linear comments carry no visible marker), so a half-deleted pair never reposts. Use scripts/reset.js.
 
 ## Parallel work
 - Any goal with 2+ independent parts: use `/parallel`, not sequential building. Agents: builder, researcher (API docs, log digging), verifier, simplifier.

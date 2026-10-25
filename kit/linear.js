@@ -183,17 +183,34 @@ export async function applyLedger(ledger) {
   return out;
 }
 
+// Which comment is which lives in state/comment-index.json { "<issue uuid>|<marker>": "<comment url>" }, NOT in the
+// comment text, so comments read clean. The index survives restarts (that's all the judges do); scripts/reset.js clears it.
+// Callers still pass a "marker: <id>" line in `body`: it's stripped before posting and used only as the index key.
+const CINDEX = "state/comment-index.json";
+const loadIdx = () => (fs.existsSync(CINDEX) ? JSON.parse(fs.readFileSync(CINDEX, "utf8")) : {});
+const saveIdx = (x) => (fs.mkdirSync("state", { recursive: true }), fs.writeFileSync(CINDEX, JSON.stringify(x, null, 2)));
+const MARK = /\n*^marker: (.+)$/m;
+
+// Gives fetched comments their marker back (in memory only), so existing `c.body.includes(marker)` checks keep working.
+export function withMarkers(comments) {
+  const byUrl = Object.fromEntries(Object.entries(loadIdx()).map(([k, url]) => [url, k.slice(k.indexOf("|") + 1)]));
+  return comments.map((c) => (byUrl[c.url] && !c.body.includes(`marker: ${byUrl[c.url]}`) ? { ...c, body: `${c.body}\n\nmarker: ${byUrl[c.url]}` } : c));
+}
+
 export async function comment(issueId, body) {
-  const marker = body.match(/^marker: .+$/m)?.[0];
-  if (marker) {
-    const d = await gql(`query($id: String!) { issue(id: $id) { team { key } comments(first: 250) { nodes { body url } } } }`, { id: issueId });
-    if (d.issue.team.key !== LINEAR_TEAM_KEY) throw new Error(`refusing to comment outside team ${LINEAR_TEAM_KEY}`);
-    const hit = d.issue.comments.nodes.find((c) => c.body.includes(marker));
-    if (hit) return { url: hit.url, existed: true };
-  }
-  const r = await gql(`mutation($i: CommentCreateInput!) { commentCreate(input: $i) { comment { url } } }`, { i: { issueId, body } });
-  logKitEvent("linear.commented", `Comment on ${issueId}: ${body.slice(0, 60)}`, { url: r.commentCreate.comment.url });
-  return { url: r.commentCreate.comment.url };
+  const marker = body.match(MARK)?.[1];
+  const clean = body.replace(MARK, "").trimEnd();
+  const d = await gql(`query($id: String!) { issue(id: $id) { id team { key } comments(first: 250) { nodes { body url } } } }`, { id: issueId });
+  if (d.issue.team.key !== LINEAR_TEAM_KEY) throw new Error(`refusing to comment outside team ${LINEAR_TEAM_KEY}`);
+  const idx = loadIdx(), k = marker && `${d.issue.id}|${marker}`;
+  if (k && idx[k]) return { url: idx[k], existed: true };
+  const legacy = marker && d.issue.comments.nodes.find((c) => c.body.includes(`marker: ${marker}`)); // posted before the index existed
+  if (legacy) return (idx[k] = legacy.url), saveIdx(idx), { url: legacy.url, existed: true };
+  const r = await gql(`mutation($i: CommentCreateInput!) { commentCreate(input: $i) { comment { url } } }`, { i: { issueId: d.issue.id, body: clean } });
+  const url = r.commentCreate.comment.url;
+  if (k) (idx[k] = url), saveIdx(idx);
+  logKitEvent("linear.commented", `Comment on ${issueId}: ${clean.slice(0, 60)}`, { url });
+  return { url };
 }
 
 if (import.meta.filename === process.argv[1]) {

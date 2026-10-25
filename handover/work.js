@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { askJSON } from "../vision/claude.js";
 import { requireEnv } from "../kit/env.js";
-import { comment } from "../kit/linear.js";
+import { comment, withMarkers } from "../kit/linear.js";
 import { findMessage, postAs, ensureChannels } from "../kit/slack.js";
 import { makeIcs } from "../kit/ics.js";
 import { freeSlots } from "../kit/slots.js";
@@ -28,7 +28,7 @@ export async function linearIssue(identifier) {
   const j = await res.json();
   if (j.errors?.length || !j.data?.issue) throw new Error(`linear: ${j.errors?.[0]?.message ?? `no issue ${identifier}`}`);
   if (j.data.issue.team.key !== LINEAR_TEAM_KEY) throw new Error(`refusing to touch ${identifier} outside ${LINEAR_TEAM_KEY}`);
-  return { ...j.data.issue, comments: j.data.issue.comments.nodes };
+  return { ...j.data.issue, comments: withMarkers(j.data.issue.comments.nodes) };
 }
 
 // Slack, deduped by marker in the channel itself (survives a lost state/ folder).
