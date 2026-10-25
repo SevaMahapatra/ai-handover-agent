@@ -130,10 +130,13 @@ export async function applyLedger(ledger) {
   const seeded = Object.fromEntries((await seedPack()).map((s) => [s.packId, s]));
   const issues = await teamIssues();
   const ownerIds = new Set([...Object.values(PERSONAS).filter((p) => p.label).map((p) => labels[p.label]), labels[UNOWNED]]);
-  const out = [], map = loadMap();
+  const out = [], map = loadMap(), claimed = new Set();
   const notes = Object.fromEntries(JSON.parse(fs.readFileSync(PACK_ISSUES, "utf8")).map((p) => [p.id, p.note ?? ""]));
   for (const o of ledger.obligations) {
-    const primary = seeded[o.linear_ids[0]];
+    // One pack issue = one obligation. If two obligations name the same pack issue (e.g. the clip and the LinkedIn post
+    // both cite ZAP-171), the second gets its own [AI] issue; otherwise their owner labels flip-flop every sync.
+    const primary = claimed.has(o.linear_ids[0]) ? undefined : seeded[o.linear_ids[0]];
+    if (primary) claimed.add(o.linear_ids[0]);
     let cur = primary ? issues.find((i) => i.id === primary.id)
       : issues.find((i) => i.id === map[o.key]) ?? issues.find((i) => i.title.startsWith("[AI] ") && (i.description?.includes(`ledger-key: ${o.key}`) || i.title === `[AI] ${o.title}`));
     const curState = cur?.state.name;

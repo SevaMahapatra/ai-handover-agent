@@ -94,6 +94,7 @@ export async function updateMessage(personId, channel, ts, text, blocks) {
   const p = persona(personId);
   const { tags, clean } = split(text);
   await api("chat.update", { channel, ts, text: clean, ...(blocks ? { blocks } : {}), ...meta(tags) });
+  logKitEvent("slack.card", `${p.aiName} card: ${clean.slice(0, 80)}`, { channel, ts });
 }
 
 export async function findMessage(channel, marker, { thread_ts } = {}) {
