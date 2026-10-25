@@ -58,7 +58,7 @@ Create the Slack app from `kit/slack-manifest.yaml`. Other commands: `npm run cy
 | `handover/scenarios/` | Plug-ins for the efficiency-doc scenarios (install, double booking, proposal, onboarding, reimbursement, case study, runbook) |
 | `kit/` | Thin clients: Linear, Slack, Gmail, `.ics`, calendar slot finder, Claude |
 | `scripts/` | Supervisor, preflight, Linear audit, reset |
-| `DEMO.md` · `DEPLOY.md` | Demo runbook · running it on a server (Dockerfile, untested) |
+| `DEPLOY.md` | Running it on a server (Dockerfile, untested) |
 
 ## Not done (yet)
 WhatsApp sending (no provider connected) · per-person DMs (owners are Linear labels, not users) · Granola via its API

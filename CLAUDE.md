@@ -11,7 +11,7 @@
 
 ## Commands
 - **Run it (tonight's deployment):** `node scripts/supervise.js` (keeps PC awake, restarts on crash, one instance only, log: state/listen.log). Stop: Ctrl+C or `taskkill /PID <pid in state/supervisor.lock> /T /F`.
-- Preflight: `./preflight.sh` · demo runbook: DEMO.md · cloud: DEPLOY.md
+- Preflight: `./preflight.sh` · demo runbook: DEMO.md (local only, gitignored) · cloud: DEPLOY.md
 - `.env`: key names only, never print values. Placeholders count as unset (`requireEnv`, kit/env.js). Slack uses Socket Mode (outbound only), so run ONE listener at a time.
 
 ## Kit functions

@@ -6,3 +6,4 @@ kit/out/
 .env.local
 .env.*.local
 state/
+DEMO.md
