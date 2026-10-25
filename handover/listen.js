@@ -63,12 +63,14 @@ async function userName(id) {
   }
 }
 
-async function onDrop(ev) {
+// A #drops message, or an @mention asking for a task: saved as a citable source, then one cycle runs, so the
+// dispatcher gives it the right owner, a due date and a Linear task like any other obligation.
+async function onDrop(ev, { kind = "slack-drop", where = "in #drops", title = "📥 *Read it.*", text = ev.text } = {}) {
   fs.mkdirSync(DROPS_DIR, { recursive: true });
   const file = `${DROPS_DIR}/slack-${ev.ts}.json`;
   if (fs.existsSync(file)) return log("drop", `already handled ${file}, skipped`);
-  const from = `${await userName(ev.user)} in #drops`;
-  fs.writeFileSync(file, JSON.stringify([{ kind: "slack-drop", at: new Date(parseFloat(ev.ts) * 1000).toISOString(), from, text: ev.text }], null, 2));
+  const from = `${await userName(ev.user)} ${where}`;
+  fs.writeFileSync(file, JSON.stringify([{ kind, at: new Date(parseFloat(ev.ts) * 1000).toISOString(), from, text }], null, 2));
   log("drop", `wrote ${file}`);
   await slack("reactions.add", { channel: ev.channel, timestamp: ev.ts, name: "eyes" }).catch((e) => log("drop.react.error", e.message));
   const r = await queueCycle("drop");
@@ -79,7 +81,7 @@ async function onDrop(ev) {
   const lines = changes.length
     ? changes.map((c) => `• ${byKey[c.key] ? `<${byKey[c.key].url}|${byKey[c.key].identifier}> ` : ""}${c.what_changed}`)
     : ["Nothing changes for anyone. Noted."];
-  const reply = await postAs("lead", ev.channel, `📥 *Read it.* ${changes.length ? `${changes.length} update${changes.length === 1 ? "" : "s"}:` : ""}\n${lines.join("\n")}`, { thread_ts: ev.ts });
+  const reply = await postAs("lead", ev.channel, `${title} ${changes.length ? `${changes.length} update${changes.length === 1 ? "" : "s"}:` : ""}\n${lines.join("\n")}`, { thread_ts: ev.ts });
   log("drop.replied", `${changes.length} changes, ${issues.length} Linear issues`, reply.permalink);
   return reply;
 }
@@ -89,8 +91,15 @@ const QA_SYSTEM = `You are the Handover Lead AI, answering a teammate's question
 Answer ONLY from the ledger given (obligations and conflicts). Cite the source refs (C01, E03, S05, D01, ZAP-102...) that back the answer, taken from the ledger's "sources" fields.
 If the answer isn't in the ledger, answer exactly "I don't have that in the ledger" and return no sources. Never invent a price, date, name, or commitment. Keep it short, Slack-friendly.`;
 
+// "@Handover AI create a task for Priya to …" / "task: …" / "todo …" -> a new Linear task via the dispatcher.
+const TASK_ASK = /^(please\s+)?(create|add|make|open|log|new)\b.*\b(task|todo|ticket|issue)\b|^(task|todo)\b[:\s]/i;
+
 async function onQuestion(ev) {
   const question = (ev.text ?? "").replace(/<@[A-Z0-9]+>/g, "").trim();
+  if (TASK_ASK.test(question)) {
+    const who = await userName(ev.user);
+    return onDrop(ev, { kind: "slack-request", where: "via @Handover AI", title: "📝 *On it.*", text: `Task request from ${who} in Slack: ${question}` });
+  }
   const ledger = JSON.parse(fs.readFileSync(LEDGER, "utf8"));
   const valid = new Set(ledger.source_refs ?? []);
   const r = await askJSON({
