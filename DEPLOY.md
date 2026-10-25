@@ -31,4 +31,3 @@ Cost and limits: whatever the host charges for one small always-on container. It
 
 ## What doesn't move to the cloud
 - `work_pack/` is baked into the image. New drops arrive through Slack `#drops`, and the listener writes them to `work_pack/drops/` inside the container. Put that folder on the volume as well if drops must survive a redeploy.
-- The camera pipeline (`vision/`) and `preflight.sh --vision` are laptop-only.

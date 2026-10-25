@@ -4,7 +4,7 @@
 // node handover/dispatch.js   -> writes state/ledger.json, prints it grouped by owner
 import fs from "node:fs";
 import { z } from "zod";
-import { askJSON } from "../vision/claude.js";
+import { askJSON } from "../kit/claude.js";
 import { loadSources, team } from "./sources.js";
 
 export const LEDGER = "state/ledger.json";

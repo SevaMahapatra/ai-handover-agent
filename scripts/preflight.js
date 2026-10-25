@@ -1,16 +1,11 @@
-// Preflight: every key and service checked in parallel, then a PASS/FAIL/SKIP table. Run via ./preflight.sh [--vision]
-// Required checks FAIL when unconfigured; optional ones SKIP until their keys are in .env.
+// Preflight: every key and service the handover needs, checked in parallel, then a PASS/FAIL table. Run via ./preflight.sh
 import "dotenv/config";
 import { isPlaceholder } from "../kit/env.js";
-import fs from "node:fs";
 import tls from "node:tls";
 
 const TIMEOUT_MS = 45_000;
-const VISION = process.argv.includes("--vision"); // cameras are out of scope tonight
 // Placeholder values (copied from .env.example) count as unset.
 const env = Object.fromEntries(Object.entries(process.env).filter(([, v]) => !isPlaceholder(v)));
-class Skip extends Error {}
-const skip = (msg) => { throw new Skip(msg); };
 const need = (...keys) => { const miss = keys.filter((k) => !env[k]); if (miss.length) throw new Error(`missing or placeholder in .env: ${miss.join(", ")}`); };
 
 async function http(url, opts = {}) {
@@ -54,7 +49,7 @@ function smtpLogin(user, pass) {
 const checks = {
   "Anthropic API": async () => {
     need("ANTHROPIC_API_KEY");
-    const { client } = await import("../vision/claude.js");
+    const { client } = await import("../kit/claude.js");
     const page = await client.models.list({ limit: 1 });
     return `key ok (${page.data[0]?.id ?? "no models listed"})`;
   },
@@ -93,31 +88,6 @@ const checks = {
     return `login ok as ${env.GMAIL_USER.replace(/(.{2}).*@/, "$1***@")}`;
   },
 
-  "WhatsApp (Twilio)": async () => {
-    if (!env.TWILIO_ACCOUNT_SID) skip("optional, not configured (TWILIO_ACCOUNT_SID)");
-    need("TWILIO_AUTH_TOKEN", "MY_PHONE");
-    const auth = Buffer.from(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`).toString("base64");
-    const { json } = await http(`https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}.json`, { headers: { authorization: `Basic ${auth}` } });
-    return `account ${json.status}`;
-  },
-
-  ...(VISION && {
-    "VLM JSON": async () => {
-      need("ANTHROPIC_API_KEY");
-      const { grabOne } = await import("../vision/capture.js");
-      const { analyzeFrame } = await import("../vision/analyze.js");
-      const rules = JSON.parse(fs.readFileSync("vision/rules/phone.json", "utf8"));
-      const v = await analyzeFrame(await grabOne("vision/samples/test.mp4"), rules);
-      if (typeof v.violation !== "boolean") throw new Error(`bad shape: ${JSON.stringify(v).slice(0, 140)}`);
-      return `valid JSON, violation=${v.violation} conf=${v.confidence}`;
-    },
-    Webcam: async () => {
-      const { grabOne, WEBCAM } = await import("../vision/capture.js");
-      const jpg = await grabOne("webcam");
-      if (jpg.length < 5000) throw new Error(`no frame from "${WEBCAM}"`);
-      return `"${WEBCAM}" ok, ${jpg.length} B`;
-    },
-  }),
 };
 
 const t0 = Date.now();
@@ -128,7 +98,7 @@ const results = await Promise.all(
       const detail = await Promise.race([fn(), new Promise((_, rej) => setTimeout(() => rej(new Error(`timeout ${TIMEOUT_MS / 1000}s`)), TIMEOUT_MS))]);
       return { name, status: "PASS", detail, ms: Date.now() - s };
     } catch (e) {
-      return { name, status: e instanceof Skip ? "SKIP" : "FAIL", detail: e.message, ms: Date.now() - s };
+      return { name, status: "FAIL", detail: e.message, ms: Date.now() - s };
     }
   }),
 );

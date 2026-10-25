@@ -10,7 +10,7 @@ import fs from "node:fs";
 import { z } from "zod";
 import { update, LEDGER } from "./dispatch.js";
 import { applyLedger, comment } from "../kit/linear.js";
-import { askJSON } from "../vision/claude.js";
+import { askJSON } from "../kit/claude.js";
 import { PERSONAS } from "./personas.js";
 import { loadSources } from "./sources.js";
 import { shiftChanges, local } from "./shift.js";
@@ -117,23 +117,13 @@ export async function runCycle({ reason = "manual", now } = {}) {
     if (w.effects.length) (didNow[o.owner] ??= []).push(`${link(issueOf[o.key])} ${o.title}${w.effects.some((e) => e.held) ? " (held back: failed my honesty check, needs a human)" : ""}`);
   });
 
-  // 3. CARRY ON: coming on shift (or first run while on shift) -> read the last handover note on each issue, say what was picked up.
+  // 3. CARRY ON: coming on shift (or first run while on shift). The handover card shows what was picked up;
+  //    the thread only gets the extra detail when this cycle did real work.
   const pickup = shifts.transitions.filter((t) => t.to === "on").map((t) => t.personId);
   if (shifts.first) pickup.push(...Object.keys(shifts.state).filter(onShift));
   for (const pid of pickup) {
-    const date = local(now, PERSONAS[pid].tz).date, mine = open.filter((o) => o.owner === pid);
-    const got = mine.map((o) => {
-      const h = info[o.key].comments.filter((c) => c.body.includes("**Handover from")).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-      return h && `• ${link(issueOf[o.key])} (<${h.url}|note>) Next: ${h.body.match(/\*\*Next:\*\* (.+)/)?.[1] ?? "-"}`;
-    }).filter(Boolean);
-    const humans = mine.filter((o) => o.needs_human).length;
-    const text = [`*${PERSONAS[pid].aiName} is on shift for ${first(pid)}.*`,
-      got.length ? `Picked up from the last handover:\n${got.join("\n")}` : "Picked up from the last handover: no handover note on my issues yet, so I'm starting from the ledger.",
-      didNow[pid]?.length ? `Done this cycle (proof on each issue):\n${didNow[pid].map((x) => `• ${x}`).join("\n")}` : `${mine.filter((o) => o.ai_can_do).length} item(s) of AI work on my issues, each logged on the issue.`,
-      humans ? `${humans} item(s) need ${first(pid)} personally; I asked below, not the room.` : ""].filter(Boolean).join("\n");
-    // The handover card already shows what was picked up; only post the extra detail when this cycle did real work.
+    const date = local(now, PERSONAS[pid].tz).date;
     if (didNow[pid]?.length) slack(`pickup ${pid}`, await say(pid, `🤖 *Done since the handover*\n${didNow[pid].map((x) => `• ${x}`).join("\n")}`, `[pickup:${pid}:${date}:${mode}]`, note(pid)));
-    void text;
   }
 
   // 5. NEEDS HUMAN: ask the owner (only while they're on shift), once per obligation.

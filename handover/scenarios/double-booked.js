@@ -2,7 +2,7 @@
 // and send the engineer the promised one-pager before the call (draft). Contract: handover/scenarios/index.js.
 import fs from "node:fs";
 import { z } from "zod";
-import { askJSON } from "../../vision/claude.js";
+import { askJSON } from "../../kit/claude.js";
 import { comment } from "../../kit/linear.js";
 import { findMessage, postAs, ensureChannels } from "../../kit/slack.js";
 import { makeIcs } from "../../kit/ics.js";

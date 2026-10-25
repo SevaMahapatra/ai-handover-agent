@@ -1,8 +1,0 @@
-[
-  {
-    "id": "no-phones",
-    "rule": "No mobile phones on the factory floor.",
-    "look_for": "A smartphone visible in a person's hand, held up, or being used in the frame.",
-    "severity": "high"
-  }
-]

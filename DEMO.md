@@ -13,7 +13,6 @@ Key facts:
 3. Have these open:
    - **Terminal**: `node scripts/supervise.js` typed in, big font. One terminal per person's AI if they run separately.
    - **Browser tabs**: the Linear board (filtered to this loop), the Slack channel, the inbox, the calendar week view (/status is not used tonight).
-   - **Phone**: WhatsApp with the Twilio sandbox chat open, for the Singapore message.
 
 ## Check-in script (60s)
 > "The card is the 24/7 Handover. New since last round: **[Y]**. You restart it."

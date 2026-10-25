@@ -1,7 +1,7 @@
 // Scenario 12 "Knowledge that walked out": Wei Lin's AI writes up how deploy alerts work from the alert emails + chat,
 // as a Linear comment (runbook draft), then asks Wei Lin in #handover to check it once. The config file is NOT in the pack.
 import { z } from "zod";
-import { askJSON } from "../../vision/claude.js";
+import { askJSON } from "../../kit/claude.js";
 import { comment } from "../../kit/linear.js";
 import { say, honesty, citedText } from "../work.js";
 import { PERSONAS } from "../personas.js";

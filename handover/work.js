@@ -2,7 +2,7 @@
 // Linear comment marker "work:<key>:<hash>", Slack "[draft:<id>]". Honesty ($ amounts, dates, addresses) is checked in code.
 import crypto from "node:crypto";
 import { z } from "zod";
-import { askJSON } from "../vision/claude.js";
+import { askJSON } from "../kit/claude.js";
 import { requireEnv } from "../kit/env.js";
 import { comment, withMarkers } from "../kit/linear.js";
 import { findMessage, postAs, ensureChannels } from "../kit/slack.js";

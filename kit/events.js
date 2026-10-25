@@ -1,5 +1,5 @@
 // CONTRACT: kit event log, shared by every kit action and the /status page.
-// Event shape: { ts: ISO string, type: "<service>.<verb>" (e.g. "whatsapp.sent", "sms.received"), summary: one line, data: object }
+// Event shape: { ts: ISO string, type: "<service>.<verb>" (e.g. "linear.commented", "slack.posted", "email.sent"), summary: one line, data: object }
 import fs from "node:fs";
 
 export const EVENTS = "kit/out/events.json";

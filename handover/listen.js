@@ -15,7 +15,7 @@ import { findBySlackTs, markDraft } from "./drafts.js";
 import { onQueueReaction, onQueueReply, setQueueCycle, queueDraftFor, queueItemFor } from "./queue.js";
 import { CHANNELS } from "./personas.js";
 import { LEDGER } from "./dispatch.js";
-import { askJSON } from "../vision/claude.js";
+import { askJSON } from "../kit/claude.js";
 
 const DROPS_DIR = process.env.DROPS_DIR || "work_pack/drops";
 const log = (type, what, link = "") => console.log(`[${new Date().toISOString()}] ${type}: ${what}${link ? ` ${link}` : ""}`);

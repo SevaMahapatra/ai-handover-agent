@@ -5,13 +5,13 @@
 - **Loop:** Granola call notes -> Linear tasks (right owner on each) -> Slack update -> email -> calendar -> WhatsApp (SG, bonus) -> shift change -> the right AI finishes its task.
 - **Schedule:** check-ins 4:30 / 6:00 / 7:30 restart the AI fresh (it must carry on, not ask) · 8:30 hands off: 3 min live, nobody touching the keyboard.
 - **Judged on:** the right person on each task + carries on · end to end with clickable proof · nothing made up · usable Monday.
-- **Out of scope:** cameras/hardware (vision/ is parked), real customers or live accounts, a pretty UI, a new chat app. Anything that talks to a person says it's AI.
+- **Out of scope:** cameras/hardware, real customers or live accounts, a pretty UI, a new chat app. Anything that talks to a person says it's AI.
 - **Decided:** no new app. Linear = shared board (each person's AI acts only on its person's issues); a dispatcher turns calls/email/Slack drops into owned issues citing sources; at shift change the outgoing AI comments done/next/why and the incoming AI carries on. Slack = where people see it. Calendar = emailed .ics. Data: `work_pack/work_pack/` (Granola = calls/). No LangSmith.
 - **Stack:** Node 24 (Python is NOT installed). Run commands from the repo root; `.env` is read from cwd.
 
 ## Commands
 - **Run it (tonight's deployment):** `node scripts/supervise.js` (keeps PC awake, restarts on crash, one instance only, log: state/listen.log). Stop: Ctrl+C or `taskkill /PID <pid in state/supervisor.lock> /T /F`.
-- Preflight: `./preflight.sh` · demo runbook: DEMO.md · prompt templates: PROMPTS.md · cloud: DEPLOY.md
+- Preflight: `./preflight.sh` · demo runbook: DEMO.md · cloud: DEPLOY.md
 - `.env`: key names only, never print values. Placeholders count as unset (`requireEnv`, kit/env.js). Slack uses Socket Mode (outbound only), so run ONE listener at a time.
 
 ## Kit functions

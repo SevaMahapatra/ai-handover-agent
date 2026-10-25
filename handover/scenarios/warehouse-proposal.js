@@ -2,7 +2,7 @@
 // price honestly: the pack has no pricing rules, so the price stays [PRICE: Sam to decide] until Sam answers in the decision
 // queue (a "decision" drop). Founder approves the price; ✅ on the draft sends it (refused while a [PLACEHOLDER] remains).
 import { z } from "zod";
-import { askJSON } from "../../vision/claude.js";
+import { askJSON } from "../../kit/claude.js";
 import { comment } from "../../kit/linear.js";
 import { findMessage, ensureChannels } from "../../kit/slack.js";
 import { addDraft, getDraft, setSlack } from "../drafts.js";

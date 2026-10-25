@@ -3,7 +3,7 @@
 FROM node:24-slim
 WORKDIR /app
 COPY package.json package-lock.json ./
-# --ignore-scripts skips ffmpeg-static's 80 MB download (the camera pipeline isn't used by the handover).
+# No install scripts are needed (pure Node + HTTPS APIs).
 RUN npm ci --omit=dev --ignore-scripts
 COPY . .
 # Mount a persistent volume here: ledger, shift state, drafts.

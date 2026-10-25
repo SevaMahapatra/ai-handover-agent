@@ -1,7 +1,7 @@
 // Scenario 10 "Case studies": Priya's AI drafts the Bayview case study, asks Lisa (Bayview) to approve it via a ✅ email draft,
 // and drafts the LinkedIn post, gated on Bayview's approval + Wei Lin's 30s clip. Human part: the customer approves.
 import { z } from "zod";
-import { askJSON } from "../../vision/claude.js";
+import { askJSON } from "../../kit/claude.js";
 import { comment } from "../../kit/linear.js";
 import { ensureChannels } from "../../kit/slack.js";
 import { honesty, citedText, say, link, workMarker } from "../work.js";
