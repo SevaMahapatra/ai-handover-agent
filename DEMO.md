@@ -30,7 +30,7 @@ If it stalls, say so. Honesty is judged.
    1. `work_pack/work_pack/calls/C01.md`, the Granola stand-in (Northwind call)
    2. Linear ZAP board, **grouped by label** (Sam / Wei Lin / Dana / Priya)
    3. Linear: the Northwind price issue (`[ZAP-102] Northwind price`)
-   4. Slack `#handover`, scrolled to the **8:00pm "Sam is off shift"** summary
+   4. Slack `#handover`: the **handover cards** (one per person per shift; Sam's and Dana's turn 🌙 at 8pm, Wei Lin's and Priya's are 🟢)
    5. Slack `#handover`: **"Sam's decisions today"** thread
    6. Gmail inbox
 4. **Phone:** Slack open on `#drops` and `#handover`, with the drop text copied to the clipboard (the hosts' 8:30 drop; fallback below).
@@ -46,7 +46,8 @@ Tab 3: point at **Due**, **Sources: C01, E03, E15**, and the **handover note**.
 > "Every task has an owner, a due date and a handover note. Where no deadline exists, it says 'AI target'. It doesn't pretend."
 
 **0:50–1:20 · The shift changes.** Tab 4.
-> "At 8pm Austin, Sam's and Dana's AIs went off shift and wrote done / next / why on every open task. At 7pm Singapore came on." Scroll to **"Wei Lin's AI is on shift… Picked up from the last handover"**. "It carried on without asking anyone: the IP check for the install, the camera-3 fix, the deploy runbook."
+> "This channel is the handover: one card per person per shift. At 8pm Austin, Sam's and Dana's cards flipped to 🌙 'handed over', and done / next / why went onto every open Linear task. Since 7pm, Wei Lin's 🟢 card shows what it carried over, one line per task: due date, 🤖 what the AI already did, ⚠️ what only she decides." Open Wei Lin's thread: "The detail lives in the thread: the IP check, the camera-3 fix, the deploy runbook. No one asked anyone."
+> **The live moment:** "These cards edit themselves. Watch Sam's: when I approve the reimbursement, 'Closed' ticks up on the next cycle."
 
 **1:20–2:10 · Live, on the phone (no keyboard).**
 1. Paste the drop into `#drops`. Within ~20s the Lead AI replies in the thread: "what changed, for whom", with Linear links. "A fact changed and the right person's task updated."
