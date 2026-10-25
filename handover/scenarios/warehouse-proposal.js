@@ -90,7 +90,7 @@ export async function run(ctx) {
 
   const d = addDraft({ id: draftId, personId: OWNER, obligationKey: KEY, payload });
   const how = price ? `Price is Sam's answer from the decision queue (${price.ref}), quoted verbatim.` : `Price left as ${PLACEHOLDER}: ${NO_RULES}`;
-  const s = d.slack ?? (await say(OWNER, `Draft for ${TO}: *${w.subject}* (one email answering all of Maria's open asks)\n${quote}\n${how}\n${srcLine} · ${link(issue)}\n✅ sends once the price is filled in; ✅ is refused while a [PLACEHOLDER] remains. ❌ discards.`, slackMarker, ctx.note(OWNER)));
+  const s = d.slack ?? (await say(OWNER, `✉️ Draft to ${TO}: *${w.subject}* (one email answering all of Maria's open asks)\n${quote}\n${how}\n${srcLine} · ${link(issue)}\n✅ sends once the price is filled in; ✅ is refused while a [PLACEHOLDER] remains. ❌ discards.`, slackMarker, ctx.note(OWNER)));
   if (!d.slack) setSlack(draftId, { channel: s.channel ?? (await ensureChannels([CHANNELS.handover]))[CHANNELS.handover], ts: s.ts, permalink: s.permalink });
   if (!s.existed && !d.slack) out.push({ type: "draft", what: `${draftId} posted for Sam's ✅`, link: s.permalink });
   const r = await comment(info.id, `**${p.aiName} drafted the Northwind reply** (not sent, waiting for Sam's ✅ in Slack): ${s.permalink}\n\n**To:** ${TO} · **Subject:** ${w.subject}\n\n${quote}\n\n${how}\n${srcLine}\n\nmarker: ${m}\n\nDraft payload:\n\`\`\`json\n${JSON.stringify(payload)}\n\`\`\``);

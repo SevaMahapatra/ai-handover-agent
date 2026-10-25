@@ -97,8 +97,8 @@ export async function runCycle({ reason = "manual", now } = {}) {
       out.handovers.push({ personId: t.personId, key: o.key, what: `${issueOf[o.key].identifier} handover note`, link: c.url });
     }
     if (mine.length) {
-      const lines = mine.map((o) => `• ${link(issueOf[o.key])} ${o.title}. Next: ${o.next_step}`).join("\n");
-      slack(`handover summary ${t.personId}`, await say(t.personId, `*${first(t.personId)} is off shift.* Handover notes are on each Linear issue (done / next / why):\n${lines}`, `[handover:${t.personId}:${t.date}:${mode}]`, note(t.personId)));
+      const lines = mine.map((o) => `• ${link(issueOf[o.key])} ${o.title}`).join("\n");
+      slack(`handover summary ${t.personId}`, await say(t.personId, `🌙 *${first(t.personId)} signed off.* ${mine.length} open, each with a done / next / why note on Linear:\n${lines}`, `[handover:${t.personId}:${t.date}:${mode}]`, note(t.personId)));
     }
   }
 
@@ -131,13 +131,15 @@ export async function runCycle({ reason = "manual", now } = {}) {
       got.length ? `Picked up from the last handover:\n${got.join("\n")}` : "Picked up from the last handover: no handover note on my issues yet, so I'm starting from the ledger.",
       didNow[pid]?.length ? `Done this cycle (proof on each issue):\n${didNow[pid].map((x) => `• ${x}`).join("\n")}` : `${mine.filter((o) => o.ai_can_do).length} item(s) of AI work on my issues, each logged on the issue.`,
       humans ? `${humans} item(s) need ${first(pid)} personally; I asked below, not the room.` : ""].filter(Boolean).join("\n");
-    slack(`pickup ${pid}`, await say(pid, text, `[pickup:${pid}:${date}:${mode}]`, note(pid)));
+    // The handover card already shows what was picked up; only post the extra detail when this cycle did real work.
+    if (didNow[pid]?.length) slack(`pickup ${pid}`, await say(pid, `🤖 *Done since the handover*\n${didNow[pid].map((x) => `• ${x}`).join("\n")}`, `[pickup:${pid}:${date}:${mode}]`, note(pid)));
+    void text;
   }
 
   // 5. NEEDS HUMAN: ask the owner (only while they're on shift), once per obligation.
   //    The founder's decisions go to ONE queue instead (handover/queue.js), not one ask per item.
   for (const o of open.filter((o) => o.needs_human && onShift(o.owner) && o.owner !== FOUNDER))
-    slack(`ask ${o.key}`, await say(o.owner, `${first(o.owner)} (human), only you can decide: ${o.needs_human} Context: ${link(issueOf[o.key])}`, `[ask:${o.key}]`, note(o.owner)));
+    slack(`ask ${o.key}`, await say(o.owner, `⚠️ *Needs you:* ${o.needs_human} · ${link(issueOf[o.key])}`, `[ask:${o.key}]`, note(o.owner)));
   out.posted.push(...(await postDecisionQueue({ ledger, issueOf, info, now, simulated, onShift })));
 
   // 6. SCENARIOS: one plug-in per scenario in handover/scenarios/ (see index.js for the contract). Each is isolated.

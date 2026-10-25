@@ -77,7 +77,7 @@ sources: refs you used.`,
     else {
       const d = addDraft({ id: dId, personId: OWNER, obligationKey: CS, payload: { personId: OWNER, intendedTo: [LISA], cc: [], subject: "Bayview case study draft for your approval", text, marker: dId } });
       const quote = text.split("\n").map((l) => `> ${l}`).join("\n");
-      const s = await say(OWNER, `Draft for ${LISA}: *${d.payload.subject}*\n${quote}\nThe case study draft is on ${link(csI)}. The photo list is a placeholder because the pack has none: Priya must fill [PHOTOS: Priya to list] first, the ✅ is refused until then.\n${srcLine} · ${link(csI)}\nReact :white_check_mark: to send, :x: to discard.`, `[draft:${dId}]`, ctx.note(OWNER));
+      const s = await say(OWNER, `✉️ Draft to ${LISA}: *${d.payload.subject}*\n${quote}\nThe case study draft is on ${link(csI)}. The photo list is a placeholder because the pack has none: Priya must fill [PHOTOS: Priya to list] first, the ✅ is refused until then.\n${srcLine} · ${link(csI)}\n✅ send · ❌ discard`, `[draft:${dId}]`, ctx.note(OWNER));
       if (!d.slack) setSlack(dId, { channel: s.channel ?? (await ensureChannels([CHANNELS.handover]))[CHANNELS.handover], ts: s.ts, permalink: s.permalink });
       await comment(ctx.info[CS].id, `**${p.aiName} drafted the approval request to Lisa** (not sent, waiting for Priya's :white_check_mark: and the photo list): ${s.permalink}\n\nmarker: ${M("approval")}`);
       if (!s.existed) out.push({ type: "draft", what: `${dId} approval request to Lisa posted for ✅`, link: s.permalink });

@@ -109,7 +109,7 @@ export async function run(ctx) {
   const payload = { personId: OWNER, intendedTo: [JORDAN], cc: [], subject, text, marker: draftId };
   const d = addDraft({ id: draftId, personId: OWNER, obligationKey: o.key, payload });
   const quote = d.payload.text.split("\n").map((l) => `> ${l}`).join("\n");
-  const s = d.slack ?? (await say(OWNER, `Draft for ${JORDAN}: *${subject}*\n${quote}\nSources: C04, S06, E06, K03 · ${link(issue)}\nHas a placeholder ([LOCATION: Sam to confirm]): fill it in before :white_check_mark:. React :white_check_mark: to send, :x: to discard.\n[scn:${id}:welcome:${ctx.mode}]`, slackMarker, ctx.note(OWNER)));
+  const s = d.slack ?? (await say(OWNER, `✉️ Draft to ${JORDAN}: *${subject}*\n${quote}\nSources: C04, S06, E06, K03 · ${link(issue)}\nHas a placeholder ([LOCATION: Sam to confirm]): fill it in before :white_check_mark:. ✅ send · ❌ discard\n[scn:${id}:welcome:${ctx.mode}]`, slackMarker, ctx.note(OWNER)));
   if (!d.slack) setSlack(draftId, { channel: s.channel ?? (await ensureChannels([CHANNELS.handover]))[CHANNELS.handover], ts: s.ts, permalink: s.permalink });
   if (!d.slack && !s.existed) effects.push({ type: "draft", what: `welcome email to ${JORDAN} posted for ✅`, link: s.permalink });
   const cm = `marker: scn:${id}:welcome-draft`;

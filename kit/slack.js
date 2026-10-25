@@ -76,7 +76,9 @@ export async function postAs(personId, channel, text, { thread_ts, blocks } = {}
     channel,
     username: p.aiName,
     icon_emoji: p.icon,
-    text: `${clean}\n_${p.signature}_`,
+    // No signature line: the sender shows as "<Name>'s AI" with Slack's APP badge, which already says it's an AI.
+    // (Emails to people outside keep their AI disclosure; see kit/email.js.)
+    text: clean,
     unfurl_links: false,
     ...(blocks ? { blocks } : {}),
     ...(thread_ts ? { thread_ts } : {}),
@@ -91,7 +93,7 @@ export async function postAs(personId, channel, text, { thread_ts, blocks } = {}
 export async function updateMessage(personId, channel, ts, text, blocks) {
   const p = persona(personId);
   const { tags, clean } = split(text);
-  await api("chat.update", { channel, ts, text: `${clean}\n_${p.signature}_`, ...(blocks ? { blocks } : {}), ...meta(tags) });
+  await api("chat.update", { channel, ts, text: clean, ...(blocks ? { blocks } : {}), ...meta(tags) });
 }
 
 export async function findMessage(channel, marker, { thread_ts } = {}) {

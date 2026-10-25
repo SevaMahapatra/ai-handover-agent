@@ -122,7 +122,7 @@ export async function run(ctx) {
     ask: `Internal email to Wei Lin (weilin@zapdemo.example), our engineer, who was not cc'd when Dana promised Farah a one-pager before the call. Body = the one-pager outline (headings + bullets) on tracking data-centre fit-out progress floor by floor, using only C03/E05/W03. Mark anything the sources don't give (results, prices, specs) as [PLACEHOLDER: Wei Lin to fill].`,
     intendedTo: ["weilin@zapdemo.example"], cc: [],
     finish: (b) => b,
-    slackText: (d, q, l) => `Draft for ${d.payload.intendedTo.join(", ")}: *${d.payload.subject}*\n${q}\nSources: C03, E05, W03 · ${l}\nReact :white_check_mark: to send, :x: to discard.`,
+    slackText: (d, q, l) => `✉️ Draft to ${d.payload.intendedTo.join(", ")}: *${d.payload.subject}*\n${q}\nSources: C03, E05, W03 · ${l}\n✅ send · ❌ discard`,
   })));
   else console.log("  - no one-pager obligation (C03 + E05) in the ledger");
   return out;

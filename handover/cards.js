@@ -41,7 +41,7 @@ function render(pid, { ledger, issueOf, info, onShift, simulated }) {
   const line = (o) => li(o, issueOf, [dd(o.due), aiDid.includes(o) && "🤖 AI did its part", o.needs_human && `⚠️ ${first(pid)} decides`].filter(Boolean).map((x) => ` · ${x}`).join(""));
   const blocks = [
     { type: "header", text: { type: "plain_text", text: `${CITY[p.city] ?? "🕒"} ${first(pid)}'s shift · ${p.role}, ${p.city}`.slice(0, 150) } },
-    { type: "context", elements: [{ type: "mrkdwn", text: `${status} · ${loc.label.replace(/ [A-Za-z_]+\/[A-Za-z_]+$/, "")} local${simulated ? " · _simulated clock_" : ""} · run by *${p.aiName}*, an AI assistant` }] },
+    { type: "context", elements: [{ type: "mrkdwn", text: `${status} · ${loc.label.replace(/ [A-Za-z_]+\/[A-Za-z_]+$/, "")} local${simulated ? " · _simulated clock_" : ""} · run by *${p.aiName}*` }] },
     { type: "section", text: { type: "mrkdwn", text: `*▶️ Carried over from the last handover (${open.length} open)*\n${list(open.map(line), 8)}` } },
     ...(closed.length ? [{ type: "section", text: { type: "mrkdwn", text: `*🔒 Closed this shift (${closed.length})*\n${list(closed.map((o) => li(o, issueOf)))}` } }] : []),
     { type: "divider" },

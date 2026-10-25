@@ -42,7 +42,7 @@ export async function run(ctx) {
     if (dry) return out.push({ type: "draft", what: `${did} for ${intendedTo.join(", ")}: ${text}`, link: "(dry)" });
     const d = addDraft({ id: did, personId: OWNER, obligationKey: o.key, payload: { personId: OWNER, intendedTo, cc: [], subject, text, marker: did } });
     const quote = text.split("\n").map((l) => `> ${l}`).join("\n"), iss = issueOf[o.key];
-    const s = await say(OWNER, `${slackIntro}\nDraft for ${intendedTo.join(", ")}: *${subject}*\n${quote}\nSources: ${refs.join(", ")}${iss ? ` · ${link(iss)}` : ""}\nReact :white_check_mark: to send, :x: to discard.\n[${M(what)}:${mode}]`, `[draft:${did}]`, ctx.note(OWNER));
+    const s = await say(OWNER, `${slackIntro}\n✉️ Draft to ${intendedTo.join(", ")}: *${subject}*\n${quote}\nSources: ${refs.join(", ")}${iss ? ` · ${link(iss)}` : ""}\n✅ send · ❌ discard\n[${M(what)}:${mode}]`, `[draft:${did}]`, ctx.note(OWNER));
     setSlack(d.id, { channel: s.channel ?? (await ensureChannels([CHANNELS.handover]))[CHANNELS.handover], ts: s.ts, permalink: s.permalink });
     if (!s.existed) out.push({ type: "draft", what: `${did} posted for approval`, link: s.permalink });
   };

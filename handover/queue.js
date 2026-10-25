@@ -17,7 +17,7 @@ import { comment } from "../kit/linear.js";
 import { listDrafts, getDraft } from "./drafts.js";
 import { PERSONAS, CHANNELS } from "./personas.js";
 import { local } from "./shift.js";
-import { say, link } from "./work.js";
+import { say, link, shortDate } from "./work.js";
 
 export const FOUNDER = "sam";
 export const MAX_ITEMS = 10;
@@ -69,7 +69,7 @@ export async function postDecisionQueue({ ledger, issueOf, info, now = new Date(
   if (!items.length) return [];
   const p = PERSONAS[FOUNDER], when = local(now, p.tz), out = [];
   const sim = simulated ? `\n_(simulated clock: ${when.label})_` : "";
-  const header = await say(FOUNDER, `*Sam's decisions today: ${items.length} of max ${MAX_ITEMS}.* Each one is ready: tap ✅ to approve or ❌ to decline. For the ones asking for a value, reply in this thread starting with its number (e.g. \`1: <value>\`).`,
+  const header = await say(FOUNDER, `🗂️ *Sam's decisions · ${items.length} today*\n✅ approve · ❌ decline · for a number, reply \`<item>: <value>\` in the thread`,
     `[queue:${FOUNDER}:${when.date}${simulated ? ":sim" : ""}]`, sim, { top: true });
   if (!header.existed) out.push({ type: "slack", what: `decision queue header (${items.length} items)`, link: header.permalink });
   const channel = header.channel ?? (await ensureChannels([CHANNELS.handover]))[CHANNELS.handover];
@@ -81,12 +81,12 @@ export async function postDecisionQueue({ ledger, issueOf, info, now = new Date(
     replies ??= (await slackApi("conversations.replies", { channel, ts: header.ts, limit: "200", include_all_metadata: "true" })).messages;
     const found = replies.find((m) => hasMarker(m, marker));
     const value = o.needs_human?.match(VALUE)?.[1]?.toLowerCase();
-    const ready = kind === "send" ? `draft "${d.payload.subject}" to ${d.payload.intendedTo.join(", ")}` : o.needs_human;
-    const action = { approve: "✅ approve / ❌ decline", input: `Reply in this thread with \`${n}: <the ${value}>\`, and the drafts fill in from your reply`, send: `✅ sends the draft ${d?.id}` }[kind];
+    const ready = kind === "send" ? `✉️ Draft ready: “${d.payload.subject}” to ${d.payload.intendedTo.join(", ")}` : o.needs_human;
+    const action = { approve: "✅ approve · ❌ decline", input: `↩️ reply \`${n}: <${value}>\` and the drafts fill in`, send: "✅ send · ❌ discard" }[kind];
     let msg;
     if (found) msg = { ts: found.ts, permalink: (await slackApi("chat.getPermalink", { channel, message_ts: found.ts })).permalink };
     else {
-      msg = await postAs(FOUNDER, channel, `${n}. *${o.title}*: ${ready}. Due ${o.due ?? "no deadline in the sources"}. ${link(issue)}\n${action}${sim}\n${marker}`, { thread_ts: header.ts });
+      msg = await postAs(FOUNDER, channel, `*${n} · ${o.title}*\n${ready}\n${[shortDate(o.due) && `due ${shortDate(o.due)}`, link(issue), action].filter(Boolean).join("  ·  ")}${sim}\n${marker}`, { thread_ts: header.ts });
       out.push({ type: "slack", what: `decision ${n} (${kind}) ${o.key}`, link: msg.permalink });
     }
     idx[o.key] = { kind, ts: msg.ts, channel, status: "pending", n, header_ts: header.ts, date: when.date, title: o.title, needs_human: o.needs_human,
@@ -116,7 +116,7 @@ export async function onQueueReaction(ev) {
   writeDrop(ev.item.ts, "Sam (one tap in the Slack decision queue)", `Sam ${verb}: ${it.title}. ${it.needs_human}`);
   const c = await comment(it.issueId, `${yes ? "Approved" : "Declined"} by Sam (one tap in Slack: ${it.permalink})\n\n${it.title}: ${it.needs_human}\n\nmarker: decision:${key}`);
   log("queue.linear", `${it.issue.identifier} ${verb}`, c.url);
-  const reply = await postAs(FOUNDER, it.channel, `${yes ? "Approved ✅" : "Declined ❌"} Logged on ${link(it.issue)}. ${yes ? `${PERSONAS[it.owner].aiName} carries on from here.` : "The item stays open."}`, { thread_ts: it.header_ts });
+  const reply = await postAs(FOUNDER, it.channel, `${yes ? "✅ Approved" : "❌ Declined"}: *${it.title}* · ${link(it.issue)}${yes ? ` · ${PERSONAS[it.owner].aiName} takes it from here` : " · stays open"}`, { thread_ts: it.header_ts });
   log("queue.replied", `${key} ${verb}`, reply.permalink);
   const idx = load();
   idx[key].status = yes ? "approved" : "declined";
@@ -151,7 +151,7 @@ export async function onQueueReply(ev) {
   idx[key].status = "answered";
   save(idx);
   kick(`answer ${key}`);
-  const reply = await postAs(FOUNDER, it.channel, "Got it. Recorded as a source; drafts will use your value next cycle.", { thread_ts: it.header_ts });
+  const reply = await postAs(FOUNDER, it.channel, `👍 Got it: *${it.title}*. The drafts will use your number.`, { thread_ts: it.header_ts });
   log("queue.answered", `${key}`, reply.permalink);
   return true;
 }

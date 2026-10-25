@@ -75,9 +75,11 @@ async function onDrop(ev) {
   const changes = r.changes ?? [];
   const keys = new Set(changes.map((c) => c.key));
   const issues = (r.issues ?? []).filter((i) => i.action !== "unchanged" || keys.has(i.key));
-  const lines = changes.length ? changes.map((c) => `- ${c.key}: ${c.what_changed} [${(c.sources ?? []).join(", ")}]`) : ["No changes to anyone's work."];
-  if (issues.length) lines.push("", "Linear:", ...issues.map((i) => `- <${i.url}|${i.identifier}> (${i.action})`));
-  const reply = await postAs("lead", ev.channel, `Drop read. ${lines.join("\n")}`, { thread_ts: ev.ts });
+  const byKey = Object.fromEntries(issues.map((i) => [i.key, i]));
+  const lines = changes.length
+    ? changes.map((c) => `• ${byKey[c.key] ? `<${byKey[c.key].url}|${byKey[c.key].identifier}> ` : ""}${c.what_changed}`)
+    : ["Nothing changes for anyone. Noted."];
+  const reply = await postAs("lead", ev.channel, `📥 *Read it.* ${changes.length ? `${changes.length} update${changes.length === 1 ? "" : "s"}:` : ""}\n${lines.join("\n")}`, { thread_ts: ev.ts });
   log("drop.replied", `${changes.length} changes, ${issues.length} Linear issues`, reply.permalink);
   return reply;
 }
@@ -113,7 +115,7 @@ async function onReaction(ev) {
   const qi = queueItemFor(ts);
   if (tap && qi?.[1].kind === "input" && !findBySlackTs(ts)) {
     const [, it] = qi;
-    const reply = await postAs("sam", it.channel, `${it.n}. *${it.title}* needs a value from Sam, so a tap can't complete it. Reply in this thread with \`${it.n}: <the value>\` and the drafts fill in from your reply.`, { thread_ts: it.header_ts });
+    const reply = await postAs("sam", it.channel, `↩️ *${it.title}* needs a number, not a tap: reply \`${it.n}: <value>\` here.`, { thread_ts: it.header_ts });
     return log("queue.input-tap", `${qi[0]}: told Sam to reply with the value`, reply.permalink);
   }
   const q = ts && !findBySlackTs(ts) ? queueDraftFor(ts) : null; // ✅ on a decision-queue "send" item -> this same draft path
@@ -121,7 +123,7 @@ async function onReaction(ev) {
   if (!d) return log("reaction", `:${ev.reaction}: on ${ts}: not a draft, ignored`);
   if (d.status !== "pending") {
     if (!tap) return log("reaction", `:${ev.reaction}: on draft ${d.id}: already ${d.status}, ignored`);
-    const why = d.status === "discarded" ? "This draft was retired (a newer draft replaces it), so nothing was sent." : `This draft was already ${d.status}${d.result?.gmailUrl ? `: ${d.result.gmailUrl}` : "."}`;
+    const why = d.status === "discarded" ? "🗄️ Retired: a newer draft replaced this one, so nothing was sent." : `This draft was already ${d.status}${d.result?.gmailUrl ? `: ${d.result.gmailUrl}` : "."}`;
     const reply = await postAs(d.personId, d.slack?.channel ?? ev.item.channel, why, { thread_ts: q?.thread_ts ?? ts });
     return log("draft.not-pending", `${d.id}: ${d.status}`, reply.permalink);
   }
@@ -132,13 +134,13 @@ async function onReaction(ev) {
     const p = d.payload;
     const holes = [...new Set(JSON.stringify([p.intendedTo, p.cc, p.subject, p.text]).match(/\[[A-Z][A-Z _/-]*:[^\]]*\]/g) ?? [])];
     if (holes.length) {
-      const reply = await postAs(d.personId, channel, `Not sent: this draft still has placeholders a human must fill first: ${holes.join(" ")}`, { thread_ts: thread });
+      const reply = await postAs(d.personId, channel, `✋ Not sent yet. Fill in ${holes.join(" ")} first.`, { thread_ts: thread });
       log("draft.blocked", `${d.id}: ${holes.join(" ")}`, reply.permalink);
       return reply;
     }
     const result = await sendEmail(d.payload);
     markDraft(d.id, "sent", result);
-    const reply = await postAs(d.personId, channel, `Sent :white_check_mark: ${result.gmailUrl}`, { thread_ts: thread });
+    const reply = await postAs(d.personId, channel, `📤 Sent · <${result.gmailUrl}|open in Gmail>`, { thread_ts: thread });
     log("draft.sent", `${d.id} as ${d.personId} ${result.gmailUrl}`, reply.permalink);
     return reply;
   }

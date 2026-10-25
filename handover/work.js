@@ -33,6 +33,9 @@ export async function linearIssue(identifier) {
 }
 
 // Slack, deduped by marker in the channel itself (survives a lost state/ folder).
+const SHORT_MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+export const shortDate = (d) => (d ? `${+d.slice(8, 10)} ${SHORT_MON[+d.slice(5, 7) - 1]}` : null); // "2026-10-22" -> "22 Oct"
+
 // Posts into the person's handover card thread when today's card exists (handover/cards.js); top-level otherwise,
 // or when { top: true } (the founder's decision queue is its own top-level card, since Slack threads don't nest).
 export async function say(personId, text, marker, note = "", { top = false } = {}) {
@@ -149,7 +152,7 @@ export async function doWork(o, issue, byRef, conflicts, note = "") {
   if (payload.ics) makeIcs(payload.ics); // validates the times before anything is posted
   const d = addDraft({ id, personId: o.owner, obligationKey: o.key, payload });
   const quote = d.payload.text.split("\n").map((l) => `> ${l}`).join("\n");
-  const s = d.slack ?? (await say(o.owner, `Draft for ${d.payload.intendedTo.join(", ")}: *${d.payload.subject}*${d.payload.ics ? ` (with a PROPOSED invite: ${d.payload.ics.start})` : ""}\n${quote}\n${srcLine} · ${link(issue)}\nReact :white_check_mark: to send, :x: to discard.`, `[draft:${id}]`, note));
+  const s = d.slack ?? (await say(o.owner, `✉️ *Draft to ${d.payload.intendedTo.join(", ")}* · ${d.payload.subject}${d.payload.ics ? " · 📅 invite attached" : ""}\n${quote}\n${link(issue)} · ✅ send · ❌ discard`, `[draft:${id}]`, note));
   if (!d.slack) setSlack(id, { channel: s.channel ?? (await ensureChannels([CHANNELS.handover]))[CHANNELS.handover], ts: s.ts, permalink: s.permalink });
   if (!s.existed && !d.slack) effects.push({ type: "draft", what: `${id} posted for approval`, link: s.permalink });
   const r = await comment(issue.id, `**${p.aiName} drafted an email** (not sent, waiting for ${p.name}'s :white_check_mark: in Slack): ${s.permalink}\n\n**To:** ${payload.intendedTo.join(", ")} · **Subject:** ${payload.subject}\n\n${quote}\n\n${srcLine}\n\nmarker: ${marker}\n\nDraft payload:\n\`\`\`json\n${JSON.stringify(payload)}\n\`\`\``);
