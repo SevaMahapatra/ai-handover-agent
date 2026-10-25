@@ -12,7 +12,7 @@ import { postAs, ensureChannels } from "../kit/slack.js";
 import { sendEmail } from "../kit/email.js";
 import { runCycle } from "./run.js";
 import { findBySlackTs, markDraft } from "./drafts.js";
-import { onQueueReaction, onQueueReply, setQueueCycle, queueDraftFor } from "./queue.js";
+import { onQueueReaction, onQueueReply, setQueueCycle, queueDraftFor, queueItemFor } from "./queue.js";
 import { CHANNELS } from "./personas.js";
 import { LEDGER } from "./dispatch.js";
 import { askJSON } from "../vision/claude.js";
@@ -108,10 +108,23 @@ async function onQuestion(ev) {
 async function onReaction(ev) {
   const ts = ev.item?.ts;
   if (await onQueueReaction(ev)) return;
+  const tap = ["white_check_mark", "x"].includes(ev.reaction);
+  // A ✅/❌ always gets an answer in Slack: silence looks like the AI is stuck.
+  const qi = queueItemFor(ts);
+  if (tap && qi?.[1].kind === "input" && !findBySlackTs(ts)) {
+    const [, it] = qi;
+    const reply = await postAs("sam", it.channel, `${it.n}. *${it.title}* needs a value from Sam, so a tap can't complete it. Reply in this thread with \`${it.n}: <the value>\` and the drafts fill in from your reply.`, { thread_ts: it.header_ts });
+    return log("queue.input-tap", `${qi[0]}: told Sam to reply with the value`, reply.permalink);
+  }
   const q = ts && !findBySlackTs(ts) ? queueDraftFor(ts) : null; // ✅ on a decision-queue "send" item -> this same draft path
   const d = ts && (findBySlackTs(ts) ?? q?.draft);
   if (!d) return log("reaction", `:${ev.reaction}: on ${ts}: not a draft, ignored`);
-  if (d.status !== "pending") return log("reaction", `:${ev.reaction}: on draft ${d.id}: already ${d.status}, ignored`);
+  if (d.status !== "pending") {
+    if (!tap) return log("reaction", `:${ev.reaction}: on draft ${d.id}: already ${d.status}, ignored`);
+    const why = d.status === "discarded" ? "This draft was retired (a newer draft replaces it), so nothing was sent." : `This draft was already ${d.status}${d.result?.gmailUrl ? `: ${d.result.gmailUrl}` : "."}`;
+    const reply = await postAs(d.personId, d.slack?.channel ?? ev.item.channel, why, { thread_ts: q?.thread_ts ?? ts });
+    return log("draft.not-pending", `${d.id}: ${d.status}`, reply.permalink);
+  }
   const channel = d.slack?.channel ?? ev.item.channel;
   const thread = q?.thread_ts ?? ts;
   if (ev.reaction === "white_check_mark") {

@@ -125,6 +125,8 @@ export async function onQueueReaction(ev) {
   return true;
 }
 
+export const queueItemFor = (ts) => (ts && byTs(ts)) || null; // [key, item] or null
+
 export function queueDraftFor(ts) {
   const hit = ts && byTs(ts);
   if (!hit || hit[1].kind !== "send" || !hit[1].draftId) return null;
