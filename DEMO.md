@@ -1,76 +1,67 @@
-# Demo runbook: The 24/7 Handover
-Schedule: 3:00 doors · **4:30 / 6:00 / 7:30** check-ins (they restart the AI fresh: carries on = bell, stuck or asks = drink) · **8:30 hands off** (3 min, live, nobody touches the keyboard) · winner at 9.
+# Demo runbook: The 24/7 Handover (8:30, 3 min, nobody touches the keyboard)
 
-Key facts:
-- **Start command:** `node scripts/supervise.js` (resumes from state/ + Linear + Slack; reruns create nothing twice)
-- **Trigger:** paste the hosts' drop into Slack `#drops` (a phone works, so no keyboard). The Lead AI replies in the thread with what changed.
-- **Shift change:** real clock, 08:00–20:00 local per person. 7:00pm Austin = Wei Lin + Priya ON (pick up); 8:00pm Austin = Sam + Dana OFF (handover notes). Rehearse with `node handover/run.js --now <ISO>` (labelled simulated).
-- **Proof links:** Linear https://linear.app/sevamahapatra/team/ZAP · Slack #handover https://sevas-team.slack.com/archives/C0CBQQYD3PD · #drops https://sevas-team.slack.com/archives/C0CBQQXRM99 · Gmail (invites from "<Name>'s AI")
+**Run it:** `npm start` in your own terminal (the supervisor: keeps the PC awake, restarts on crash, one copy only).
+It resumes from `state/` + Linear + Slack, and a restart posts nothing twice. Stop it with Ctrl+C.
 
-## Before every check-in (T-10 min)
-1. `./preflight.sh`: everything you'll use must be PASS.
-2. Rehearse the restart once: kill all agent processes, run `node scripts/supervise.js`, and confirm it resumes without asking.
-3. Have these open:
-   - **Terminal**: `node scripts/supervise.js` typed in, big font. One terminal per person's AI if they run separately.
-   - **Browser tabs**: the Linear board (filtered to this loop), the Slack channel, the inbox, the calendar week view (/status is not used tonight).
+**Proof links:** Linear https://linear.app/sevamahapatra/team/ZAP · Slack #handover https://sevas-team.slack.com/archives/C0CBQQYD3PD · #drops https://sevas-team.slack.com/archives/C0CBQQXRM99 · Gmail (emails from "<Name>'s AI")
 
-## Check-in script (60s)
-> "The card is the 24/7 Handover. New since last round: **[Y]**. You restart it."
-
-They restart it. It carries on: point at the **[NEW LINEAR ISSUE / SLACK MESSAGE]** it just produced.
-> "It knew **[what's owed, to whom, by when]** from **[the ledger / Linear]**, not from me."
-
-If it stalls, say so. Honesty is judged.
-
-## 8:30 prep (8:10–8:25)
-1. `./preflight.sh`: all PASS. `node scripts/linear-audit.js`: "0 open issue(s) missing something".
-2. The supervisor is running (`tail -3 state/listen.log` shows a `cycle:` line from the last 5 minutes). Then keyboard down.
-3. **Laptop tabs, in this order** (you click with the mouse, no typing):
-   1. `work_pack/work_pack/calls/C01.md`, the Granola stand-in (Northwind call)
+## Prep (8:10–8:25)
+1. `npm start`. Wait for `socket: connected` and a `cycle:` line. Then `./preflight.sh` (ALL GREEN) and `npm run audit` ("0 open issue(s) missing something").
+2. **Laptop tabs, in this order** (mouse only):
+   1. `work_pack/work_pack/calls/C01.md`: the Granola notes for the Northwind call
    2. Linear ZAP board, **grouped by label** (Sam / Wei Lin / Dana / Priya)
-   3. Linear: the Northwind price issue (`[ZAP-102] Northwind price`)
-   4. Slack `#handover`: the **handover cards** (one per person per shift; Sam's and Dana's turn 🌙 at 8pm, Wei Lin's and Priya's are 🟢)
-   5. Slack `#handover`: **"Sam's decisions today"** thread
-   6. Gmail inbox
-4. **Phone:** Slack open on `#drops` and `#handover`, with the drop text copied to the clipboard (the hosts' 8:30 drop; fallback below).
-5. Pick ONE draft with no `[PLACEHOLDER]` for the live ✅, e.g. Dana's AI's invite to Rachel (Cedar engineer call, computed slots). Check it says "React ✅ to send".
+   3. Linear `[ZAP-102] Northwind price`
+   4. Slack `#handover`: the 4 handover cards (Sam and Dana 🌙 since 8pm, Wei Lin and Priya 🟢 since 7pm) + 🗂️ Sam's decisions
+   5. Gmail inbox
+3. **Phone:** Slack open on `#drops`, with the drop text copied (the hosts' 8:30 drop, or the fallback below).
+4. For the live ✅, pick a draft with **no** `[PLACEHOLDER]`: Dana's draft to Rachel (Cedar engineer call) in Dana's card thread.
 
-## 8:30 final demo (3 min, nobody touches the keyboard)
-**0:00–0:20 · The problem.** "6pm Austin: a warehouse lead wants a layout and a price by Thursday. Austin logs off, Singapore wakes up. Tonight everyone on this team has their own AI. Nobody here is typing; it's been running on its own since 6."
+## The 3 minutes
+**0:00–0:20 · The problem.**
+> "6pm Austin: a warehouse lead wants a layout and a price by Thursday. Austin logs off, Singapore wakes up, and things get dropped. Tonight every teammate has their own AI, and they hand off through one shared record. Nobody here is typing; it has run on its own since 6."
 
-**0:20–0:50 · A call ends → work gets made (scenario 3).** Tab 1, then tab 2.
-> "Granola notes from the Northwind call. The dispatcher read the whole week, 70 sources, and made each obligation a Linear task with the right owner: layout → Wei Lin, price → Sam, the call with Tom → Dana, the VP one-pager → Priya."
+**0:20–0:50 · A call ends → work gets made.** Tab 1, then tab 2, then tab 3.
+> "Granola notes from the Northwind call. The dispatcher read the whole week, 70 sources, and turned every obligation into a Linear task with the right owner: price → Sam, layout → Wei Lin, the call with Tom → Dana, the VP one-pager → Priya."
 
-Tab 3: point at **Due**, **Sources: C01, E03, E15**, and the **handover note**.
-> "Every task has an owner, a due date and a handover note. Where no deadline exists, it says 'AI target'. It doesn't pretend."
+On `[ZAP-102]`, point at **Due**, **Based on**, and the **handover note**:
+> "Owner, due date, why, next step, and where every fact came from. No deadline in the sources? It says 'AI target'. It doesn't pretend."
 
 **0:50–1:20 · The shift changes.** Tab 4.
-> "This channel is the handover: one card per person per shift. At 8pm Austin, Sam's and Dana's cards flipped to 🌙 'handed over', and done / next / why went onto every open Linear task. Since 7pm, Wei Lin's 🟢 card shows what it carried over, one line per task: due date, 🤖 what the AI already did, ⚠️ what only she decides." Open Wei Lin's thread: "The detail lives in the thread: the IP check, the camera-3 fix, the deploy runbook. No one asked anyone."
-> **The live moment:** "These cards edit themselves. Watch Sam's: when I approve the reimbursement, 'Closed' ticks up on the next cycle."
+> "This channel is the handover: one card per person per shift. At 8pm Sam's and Dana's AIs signed off 🌙 and left done / next / why on every open task. Wei Lin's 🟢 card shows what she picked up: one line per task, 🤖 what her AI already did, ⚠️ what only she decides. The detail is in the thread. Nobody asked anyone."
 
-**1:20–2:10 · Live, on the phone (no keyboard).**
-1. Paste the drop into `#drops`. Within ~20s the Lead AI replies in the thread: "what changed, for whom", with Linear links. "A fact changed and the right person's task updated."
-2. Tab 5, **Sam's decision queue**: "Max 10 a day, each one tap." Tap ✅ on **Reimburse Wei Lin $640**. The thread says "Approved ✅", then the next cycle closes the Linear issue and tells Wei Lin's AI. "Payment is queued in test mode; a human pays. We say that out loud."
-3. Tap ✅ on the Rachel invite draft. "Sent ✅" with a link. Tab 6: the invite from "Dana's AI", labelled as AI, with an `.ics`.
+**1:20–2:10 · Live, from the phone.**
+1. Paste the drop into `#drops`. In ~20–30s, 👀 then "📥 **Read it.** N updates" with Linear links.
+   > "A fact changed. The right person's task updated, and it says why."
+2. Open 🗂️ **Sam's decisions** and tap ✅ on **Approve and reimburse Wei Lin $640**. You'll see "✅ Approved", the Linear task closes, and Sam's card shows 🔒 Closed.
+   > "Only humans decide money, prices and approvals. Each decision arrives ready: one tap. Payment is queued in test mode, and a human pays."
+3. Tap ✅ on Dana's draft to Rachel. "📤 Sent · open in Gmail", then tab 5: the email from **Dana's AI**, with a calendar invite.
+   > "Nothing goes out without a ✅. Every email says it's from an AI, and the times come from the real calendar."
 
-**2:10–2:40 · Pick 2–3 scenarios** (table below). Name the rest in one line.
+**2:10–2:40 · Two or three scenarios** from the table below. Name the rest in one line.
 
-**2:40–3:00 · Honest + Monday.** "Every date, $ and address is checked in code against the sources. When the AI can't know something, like a price with no pricing rules, it leaves a `[PRICE: Sam to decide]` that blocks sending. It runs inside Slack, Linear and Gmail: nothing new to adopt on Monday."
+**2:40–3:00 · Honest + Monday.**
+> "Every date, $ and address is checked in code against the sources. When the AI can't know something, like a price with no pricing rules, it leaves a placeholder that blocks sending. It lives in Slack, Linear and Gmail: nothing new to adopt on Monday."
 
-## How to show each scenario (where to click · the line to say)
-| # | Scenario | Click | Say |
+## Every scenario from the brief and the efficiency doc
+| Scenario (source) | Do | They see | Say |
 |---|---|---|---|
-| 1 | Factory install | Linear `[ZAP-111] Harbor Point IP addresses` → comment "IP plan checked…" · `[ZAP-110]` camera-3 fix · #handover Raj date draft | "It checked Ken's IP plan against the device list in code: 6 cameras, 6 addresses. It proposed 13:30–16:00 because Raj asked for 13:30 and forklifts move at 16:00. Wei Lin confirms." |
-| 2 | Double-booked day | Linear `[ZAP-121] Crestline call clashes…` → "Clash detected from the calendar" · the slots draft in Sam's decision thread | "It spotted the clash itself, and offers Farah three slots computed from the calendar, not made up. Sam's ✅ approves the slots. Priya's AI also sends Wei Lin the one-pager he was never copied on." |
-| 3 | Warehouse proposal | #handover Northwind proposal draft · Linear `[ZAP-102]` comment "No pricing rules…" | "All of Maria's open questions in one email. There are no pricing rules in the pack, so it won't invent a price, and the supplier quote is our cost. It waits for Sam's number in the queue." |
-| 5 | Hiring | Linear `[ZAP-130] Onboard Jordan` → 6 sub-issues · welcome draft | "Jordan starts Monday with nothing. The checklist became owned tasks; the welcome email waits on one fact only Sam has: where to go at 9am." |
-| 9 | Reimbursements | Sam's queue item → ✅ live · Linear `[ZAP-160]` | "It checked the $640 in both sources, says there are no receipts, and after one tap it queues the payment in test mode." |
-| 10 | Case studies | Linear `[ZAP-170]` case-study draft · `[ZAP-171]` LinkedIn copy "WAITING" | "An honest draft, cam 5 still bad included, sent to Bayview for approval. The post is held until they approve." |
-| 12 | Knowledge walked out | Linear `[ZAP-161] Document how deploy alerts…` → runbook comment | "Alex is on leave. It wrote down how alerts work from the alert emails and chat, and lists what it does NOT know, for Wei Lin to check once." |
-| — | Not built (say so) | — | "Shipyard pilot, call engine, advisor deal, grant pilot, event night: not in tonight's data, so we didn't fake them." |
+| The call that ends at night (brief) | Tabs 1–3 above | Owners, due, handover note, "Based on" | "Every piece has the right owner; nothing is made up." |
+| The shift changes (brief, 8:30 chain) | Sam's 🌙 card and thread, Wei Lin's 🟢 card | "🌙 Sam signed off", badges per task | "Singapore carried on without asking." |
+| The money that sits (brief + doc #9) | ✅ on the $640 item in Sam's decisions | "✅ Approved", task closed, card 🔒 | "$640 checked in both sources, no receipts in the pack, one tap queues it." |
+| Things go out (brief, 8:30 chain) | ✅ on Dana's draft to Rachel → Gmail | "📤 Sent", email + invite from Dana's AI | "Only after ✅, always labelled AI." |
+| The double-booked afternoon (brief + doc #2) | Linear `[ZAP-121]` → "Clash detected from the calendar"; the 3-slot draft in Sam's decisions | Three PROPOSED slots for Farah | "It spotted the clash itself; Sam's ✅ approves the slots." |
+| The promise nobody else saw (brief) | Priya's draft to Wei Lin (Crestline one-pager), in Priya's card thread | "You weren't cc'd" | "The engineer has the one-pager before the call." |
+| The proposal stuck on a price (brief + doc #3) | The Northwind proposal draft in Sam's card thread; tap ✅ | "✋ Not sent yet. Fill in [PRICE: Sam to decide] first." | "No pricing rules, so no invented price. The supplier quote is our cost." |
+| The person on leave (brief + doc #12) | Linear `[ZAP-161]` → the runbook comment | Facts with sources, plus "What's NOT known" | "Alex is on leave; it wrote down what the alert emails show, and what it doesn't know." |
+| The helper that forgets (brief) | Before 8:30 or when asked: Ctrl+C, then `npm start` | It reconnects; 0 duplicates; cards keep updating | "Restart it: it carries on and drafts nothing twice." |
+| Factory install (doc #1) | Linear `[ZAP-111]` → "IP plan checked"; `[ZAP-110]` camera-3 fix; Raj's date draft | 6 cameras ↔ 6 addresses; PROPOSED 13:30–16:00 | "It checked IT's details against our device list, and proposed a start that fits the forklifts." |
+| Hiring (doc #5) | Linear `[ZAP-130]` → 6 sub-issues; the welcome draft | Owned checklist due Mon 26 Oct | "The email waits on one fact only Sam has: where to go at 9am." |
+| Case studies (doc #10) | Linear `[ZAP-170]` draft; `[ZAP-171]` LinkedIn copy | "DRAFT, not public until Bayview approves", "WAITING" | "Honest, cam 5 included; the post is held until they say yes." |
+| Not in tonight's data (doc #4 #6 #7 #8 #11) | Say it | — | "Shipyard pilot, call engine, advisor deal, grant pilot, event night: not in the work pack, so we didn't fake them." |
 
-## Fallbacks (label them out loud, never fake them)
-- **No hosts' drop at 8:30:** paste `Maria (email): Tom can do Tuesday 3 Nov at 10:00 Austin time for the site call.`, then SAY it's our own test drop. The Lead AI will treat it as a source (D..).
-- **The Lead AI doesn't reply within ~30s:** don't wait. Show tab 4/5 instead; the 5-minute cycle will catch it.
-- **Wi-Fi dies:** tether to the phone hotspot. Otherwise walk through the proof links that already exist (Linear + #handover): "this is what it did since 6pm".
-- **WhatsApp:** not connected tonight (no Twilio key). Slack carries the Singapore updates; say so if asked.
+## Fallbacks (say them out loud, never fake them)
+- **No hosts' drop at 8:30:** paste `Maria (email): Tom can do Tuesday 3 Nov at 10:00 Austin time for the site call.` and SAY it's our own test drop.
+- **No Lead AI reply in ~30s:** don't wait. Show tab 4; the next 5-minute cycle catches it.
+- **A tap shows nothing:** every ✅/❌ gets a reply in its thread; if none, show the cards and move on.
+- **Wi-Fi dies:** tether to the phone hotspot. Otherwise walk through the links that already exist: "this is what it did since 6pm".
+- **Asked about WhatsApp:** not connected tonight (no provider key); Slack carries the Singapore updates.
