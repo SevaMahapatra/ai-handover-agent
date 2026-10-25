@@ -143,7 +143,9 @@ export async function runCycle({ reason = "manual", now } = {}) {
   // 6. SCENARIOS: one plug-in per scenario in handover/scenarios/ (see index.js for the contract). Each is isolated.
   out.scenarios = await runScenarios({ ledger, open, issueOf, info, byRef, sources, now, simulated, mode, note, onShift, dry: false });
 
-  // 7. LIVE CARDS: re-render today's cards and edit them in place when anything changed.
+  // 7. LIVE CARDS: re-read Linear (this cycle may have closed issues, e.g. an approved reimbursement), then re-render
+  //    today's cards and edit them in place when anything changed. So a ✅ shows on the card within the same cycle.
+  await pool(open, 4, async (o) => (info[o.key] = await linearIssue(issueOf[o.key].identifier)));
   out.scenarios.push(...(await refreshCards(cardCtx)));
 
   shifts.save();
